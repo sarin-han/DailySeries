@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Goal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Serif+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root {
+    --bg:#0c0c0e; --paper:#16161a; --ink:#f3f0e8; --muted:#8b8b96; --line:#26262d;
+    --acc:#d6ff3d; --on-acc:#10110a; --hot:#ff5a36;
+    --serif:"Noto Serif KR","Instrument Serif",serif;
+    --disp:"Instrument Serif","Noto Serif KR",serif;
+    --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html { color-scheme:dark; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 var(--sans); -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(900px 500px at 85% -10%, rgba(214,255,61,.07), transparent 60%), radial-gradient(700px 400px at -10% 30%, rgba(255,90,54,.05), transparent 60%); background-attachment:fixed; }
+  main { max-width:860px; margin:0 auto; padding:24px 18px 90px; }
+  button { font:inherit; color:inherit; cursor:pointer; transition:transform .15s ease, background .2s ease, border-color .2s ease, opacity .2s ease; }
+  button:active:not(:disabled) { transform:scale(.97); }
+  ::selection { background:var(--acc); color:var(--on-acc); }
+  .hidden { display:none !important; }
+
+  /* header */
+  header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px; gap:12px; }
+  h1 { margin:0; font-size:clamp(26px,4.4vw,36px); line-height:.95; font-weight:800; letter-spacing:-.04em; }
+  h1 span { font-family:var(--disp); font-style:italic; font-weight:400; color:var(--acc); letter-spacing:-.02em; }
+  .sub { color:var(--muted); font-size:13px; margin-top:10px; letter-spacing:.02em; }
+  .streak { display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 12px 0 16px; border:1px solid var(--line); background:var(--paper); border-radius:999px; font-size:10px; font-weight:700; letter-spacing:.22em; line-height:1; color:var(--muted); white-space:nowrap; }
+  .streak b { display:inline-block; min-width:14px; padding:0 6px 3px 0; text-align:center; font-family:var(--disp); font-weight:400; font-size:22px; line-height:22px; height:22px; letter-spacing:0; color:var(--acc); background:none; font-variant-numeric:tabular-nums; }
+
+  /* hero */
+  .hero { position:relative; overflow:hidden; background:var(--paper); border:1px solid var(--line); border-radius:28px; padding:24px 26px 22px; }
+  .hero::before { content:""; position:absolute; right:-80px; top:-80px; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle, rgba(214,255,61,.22), transparent 65%); pointer-events:none; }
+  .hero .tag { display:flex; align-items:center; gap:10px; font-size:11px; letter-spacing:.28em; font-weight:700; color:var(--muted); }
+  .hero .tag::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--acc); box-shadow:0 0 12px var(--acc); }
+  .chip { margin-left:4px; padding:3px 12px; border-radius:99px; border:1px solid var(--acc); color:var(--acc); font-size:11px; letter-spacing:.08em; font-weight:700; text-transform:uppercase; }
+  .hero .q { position:relative; font-family:var(--serif); font-size:clamp(18px,2.6vw,22px); line-height:1.5; font-weight:700; letter-spacing:-.015em; margin:14px 0 20px; word-break:keep-all; }
+  .go { background:var(--acc); color:var(--on-acc); border:0; border-radius:12px; padding:10px 20px; font-size:15px; font-weight:800; letter-spacing:.01em; }
+  .go:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 10px 30px rgba(214,255,61,.25); }
+  .go.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); margin-left:8px; font-weight:600; font-size:13px; padding:9px 14px; }
+  .go.ghost:hover:not(:disabled) { border-color:var(--ink); box-shadow:none; }
+  .go.ghost:disabled { opacity:.35; cursor:not-allowed; }
+  .done { margin-left:14px; font-size:13px; color:var(--acc); font-weight:600; }
+
+  /* feedback time */
+  .sec { margin:28px 0 10px; display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  .sec h2 { margin:0; font-family:var(--disp); font-style:italic; font-weight:400; font-size:30px; }
+  .sec small { color:var(--muted); font-size:12.5px; }
+  .ft { background:var(--paper); border:1px solid var(--line); border-radius:24px; padding:22px 24px; }
+  .ft .when { font-size:11px; letter-spacing:.24em; font-weight:700; color:var(--acc); }
+  .ft .oq { font-family:var(--serif); font-size:18px; font-weight:700; line-height:1.5; margin:10px 0 12px; word-break:keep-all; }
+  .ft .oa { white-space:pre-wrap; font-size:15px; line-height:1.8; color:var(--muted); padding:14px 16px; border-left:3px solid var(--acc); background:var(--bg); border-radius:0 12px 12px 0; max-height:180px; overflow-y:auto; }
+  .ft .ask { font-weight:700; margin:18px 0 8px; font-size:14.5px; }
+  .ft textarea { min-height:90px; font-size:15.5px; }
+  .ft .row { display:flex; gap:8px; margin-top:12px; align-items:center; }
+  .ft .empty { color:var(--muted); font-size:14px; margin:0; }
+  .wk { display:grid; gap:8px; }
+  .wk button { display:flex; gap:14px; align-items:baseline; text-align:left; background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:12px 16px; }
+  .wk button:hover { border-color:var(--acc); }
+  .wk .d { font-size:11px; letter-spacing:.14em; font-weight:700; color:var(--muted); min-width:64px; }
+  .wk .t { font-weight:700; font-size:14px; white-space:nowrap; word-break:keep-all; }
+  .wk .p { color:var(--muted); font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+  .wk .none { opacity:.35; }
+
+  /* calendar */
+  .calhead { display:flex; align-items:center; justify-content:space-between; margin:28px 0 10px; }
+  .calhead h2 { margin:0; font-family:var(--disp); font-style:italic; font-weight:400; font-size:30px; letter-spacing:0; }
+  .nav { display:flex; align-items:center; gap:12px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:.15em; font-size:14px; color:var(--muted); }
+  .nav button { width:36px; height:36px; border-radius:50%; border:1px solid var(--line); background:var(--paper); }
+  .nav button:hover { border-color:var(--acc); color:var(--acc); }
+  .grid { display:grid; grid-template-columns:repeat(7,1fr); gap:7px; }
+  .dow { text-align:center; color:var(--muted); font-size:11px; padding:6px 0 4px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; }
+  .dow:first-child { color:var(--hot); }
+  .cell { min-height:96px; border-radius:14px; border:1px solid var(--line); background:var(--paper); padding:8px 9px; text-align:left; display:flex; flex-direction:column; justify-content:space-between; }
+  .cell.empty { border:0; background:transparent; cursor:default; }
+  .top2 { display:flex; justify-content:space-between; align-items:center; width:100%; }
+  .bot { display:flex; flex-direction:column; gap:2px; align-items:flex-start; width:100%; }
+  .cell .n { font-weight:700; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .cat2 { font-size:9px; font-weight:700; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; }
+  .kw { font-size:12.5px; font-weight:700; line-height:1.25; word-break:keep-all; color:var(--ink); }
+  .chk { width:19px; height:19px; border-radius:50%; background:var(--acc); color:var(--on-acc); font-size:11px; font-weight:900; display:grid; place-items:center; }
+  .cell.done { border-color:rgba(214,255,61,.45); background:linear-gradient(160deg, rgba(214,255,61,.10), var(--paper) 60%); }
+  .cell.future { opacity:.28; cursor:not-allowed; }
+  .cell.today { border-color:var(--ink); }
+  .cell.today .n { background:var(--ink); color:var(--bg); border-radius:99px; padding:0 8px; }
+  .cell:not(.empty):not(.future):hover { transform:translateY(-2px); border-color:var(--acc); }
+
+  /* card */
+  .overlay { position:fixed; inset:0; background:rgba(5,5,7,.72); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:14px; z-index:10; animation:fadein .2s ease; }
+  @keyframes fadein { from { opacity:0; } to { opacity:1; } }
+  @keyframes rise { from { opacity:0; transform:translateY(16px) scale(.98); } to { opacity:1; transform:none; } }
+  .sheet { width:100%; max-width:660px; max-height:94vh; background:var(--paper); border:1px solid var(--line); border-radius:28px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.6); animation:rise .28s cubic-bezier(.2,.9,.3,1); }
+  .top { display:flex; align-items:center; gap:8px; padding:16px 18px 4px; }
+  .x { width:36px; height:36px; border-radius:50%; border:1px solid var(--line); background:transparent; }
+  .x:hover { border-color:var(--ink); }
+  .sp { flex:1; }
+  .pill { border:1px solid var(--line); border-radius:999px; background:transparent; padding:6px 14px; font-size:12.5px; font-weight:600; color:var(--muted); }
+  .pill:hover:not(:disabled) { border-color:var(--acc); color:var(--acc); }
+  .pill:disabled { opacity:.35; cursor:not-allowed; }
+  .body { padding:6px 28px 8px; overflow-y:auto; }
+  .step { font-size:11px; letter-spacing:.28em; font-weight:700; color:var(--acc); }
+  .qbox { font-family:var(--serif); font-size:clamp(23px,4vw,30px); line-height:1.4; font-weight:900; letter-spacing:-.02em; margin:12px 0 20px; word-break:keep-all; }
+  textarea { width:100%; min-height:250px; padding:18px; border-radius:18px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-size:16.5px; line-height:1.85; resize:vertical; transition:border-color .2s, box-shadow .2s; }
+  textarea::placeholder { color:#4f4f58; }
+  textarea:focus { outline:none; border-color:var(--acc); box-shadow:0 0 0 4px rgba(214,255,61,.10); }
+  .meta { display:flex; justify-content:space-between; gap:12px; margin-top:10px; font-size:12.5px; color:var(--muted); }
+  .meta .good { color:var(--acc); font-weight:700; }
+  .follow { margin-top:16px; display:flex; flex-direction:column; gap:14px; }
+  .fql { display:flex; justify-content:space-between; align-items:center; font-size:10px; letter-spacing:.3em; font-weight:800; color:var(--muted); margin-bottom:6px; }
+  .fqt { font-family:var(--serif); font-size:17px; line-height:1.6; font-weight:700; padding:12px 16px; border-radius:14px; background:rgba(214,255,61,.10); border:1px solid rgba(214,255,61,.4); word-break:keep-all; }
+  .fdel { width:30px; height:30px; display:grid; place-items:center; border:1px solid var(--line); background:transparent; border-radius:50%; font-size:16px; line-height:1; font-weight:700; color:var(--muted); }
+  .fdel:hover:not(:disabled) { border-color:var(--acc); color:var(--acc); }
+  .fdel:disabled { opacity:.3; cursor:not-allowed; }
+  .fq textarea { min-height:110px; margin-top:10px; font-size:15.5px; }
+  .fq .err { font-size:14px; color:var(--hot); font-weight:600; margin-top:10px; }
+  .foot { display:flex; align-items:center; gap:8px; padding:14px 18px 18px; border-top:1px solid var(--line); margin-top:12px; }
+  .btn { border:1px solid var(--line); background:transparent; border-radius:14px; padding:11px 20px; font-weight:700; }
+  .btn:hover:not(:disabled) { border-color:var(--ink); }
+  .btn.main { background:var(--acc); color:var(--on-acc); border-color:var(--acc); padding:11px 30px; font-weight:800; }
+  .btn.main:hover:not(:disabled) { box-shadow:0 8px 24px rgba(214,255,61,.25); transform:translateY(-1px); }
+  .btn:disabled { opacity:.3; cursor:not-allowed; }
+
+  /* streak toast */
+  .toast { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:0; z-index:30; }
+  .toast-in { background:var(--acc); color:var(--on-acc); border-radius:30px; padding:26px 52px 22px; text-align:center; box-shadow:0 30px 90px rgba(214,255,61,.3); transform:scale(.8); }
+  .toast .tl { display:block; font-size:11px; letter-spacing:.4em; font-weight:800; opacity:.7; }
+  .toast b { display:block; font-family:var(--disp); font-size:96px; line-height:1; font-weight:400; letter-spacing:-.02em; }
+  .toast .td { display:block; font-size:12px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; opacity:.7; }
+  .toast.show { animation:toastfade 2.4s ease forwards; }
+  .toast.show .toast-in { animation:toastpop 2.4s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  @keyframes toastfade { 0% { opacity:0; } 12% { opacity:1; } 65% { opacity:1; } 100% { opacity:0; } }
+  @keyframes toastpop { 0% { transform:scale(.8); } 15% { transform:scale(1); } 100% { transform:scale(1.04); } }
+
+  @media (max-width:560px) {
+    main { padding:24px 14px 70px; }
+    .hero { padding:26px 22px 24px; border-radius:22px; }
+    .cell { min-height:78px; padding:6px 6px; } .kw { font-size:11px; } .cat2 { font-size:8px; }
+    .overlay { padding:0; } .sheet { max-height:100vh; height:100vh; max-width:none; border-radius:0; border:0; }
+    .body { padding:6px 20px 8px; }
+    .wk .p { display:none; }
+  }
+  .dnav { --n-ink:#f3f0e8; --n-mut:#8b8b96; --n-acc:#d6ff3d; display:flex; justify-content:flex-end; gap:4px; margin:0 auto 14px; padding:0; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; font-family:var(--sans); }
+  .dnav a { color:var(--n-mut); text-decoration:none; padding:4px 0; margin-left:14px; border-bottom:2px solid transparent; }
+  .dnav a:hover { color:var(--n-ink); }
+  .dnav a[aria-current] { color:var(--n-ink); border-bottom-color:var(--n-acc); pointer-events:none; }
+</style>
+</head>
+<body>
+<main>
+  <nav class="dnav"><a href="daily-writing.html">Writing</a><a href="daily-goal.html" aria-current="page">Goal</a><a href="daily-billionaire.html">Billionaire</a><a href="daily-spending.html">Spending</a><a href="daily-time.html">Time</a></nav>
+  <header>
+    <div>
+      <h1>Daily <span>Goal</span></h1>
+      <div class="sub" id="today"></div>
+    </div>
+    <div class="streak">STREAK<b id="streak">0</b></div>
+  </header>
+
+  <section class="hero">
+    <div class="tag">TODAY<span class="chip" id="hCat"></span></div>
+    <div class="q" id="hQ"></div>
+    <button class="go" id="hGo">Start →</button><button class="go ghost" id="hChange"></button><span class="done" id="hDone"></span>
+  </section>
+
+  <div class="sec"><h2>This week</h2></div>
+  <div class="wk" id="wk"></div>
+
+  <div class="calhead">
+    <h2>Calendar</h2>
+    <div class="nav"><button id="prev">‹</button><span id="ym"></span><button id="nextM">›</button></div>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <div class="sec"><h2>Feedback time</h2></div>
+  <div class="ft" id="ft"></div>
+</main>
+
+<div class="toast" id="toast" aria-live="polite"><div class="toast-in"><span class="tl">STREAK</span><b id="toastN">0</b><span class="td">days</span></div></div>
+
+<div class="overlay hidden" id="overlay">
+  <div class="sheet">
+    <div class="top">
+      <button class="x" id="close" aria-label="Close">✕</button>
+      <span class="sp"></span>
+      <button class="pill" id="swap"></button>
+    </div>
+    <div class="body">
+      <div class="step" id="sCat"></div>
+      <div class="qbox" id="sQ"></div>
+      <textarea id="free" placeholder="Just start writing…"></textarea>
+      <div class="meta"><span id="count"></span><span>Rough is fine. Just write.</span></div>
+      <div class="follow" id="follow"></div>
+    </div>
+    <div class="foot">
+      <button class="btn" id="aiFb">Deeper</button>
+      <span class="sp"></span>
+      <button class="btn main" id="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+const QUESTIONS = [
+  { c:"Discover", k:"올해의 한 가지", q:"올해가 끝났을 때 '이건 해냈다'고 말하고 싶은 한 가지는 무엇인가?" },
+  { c:"Discover", k:"마음에 걸리는 일", q:"요즘 가장 마음에 걸리는 일은 무엇이고, 왜 신경이 쓰일까?" },
+  { c:"Discover", k:"걱정 없다면", q:"시간과 돈 걱정이 없다면 1년 동안 무엇을 하고 싶은가?" },
+  { c:"Discover", k:"몰입의 순간", q:"시간 가는 줄 모르고 몰입했던 순간은 언제였고, 무엇을 하고 있었나?" },
+  { c:"Discover", k:"바꾸고 싶은 것", q:"지금 내 생활에서 가장 바꾸고 싶은 한 가지는 무엇인가?" },
+  { c:"Discover", k:"3년 뒤의 하루", q:"3년 뒤의 나는 어떤 하루를 보내고 있으면 좋겠는가?" },
+  { c:"Discover", k:"부러운 사람", q:"내가 부러워하는 사람은 누구이고, 그 사람의 무엇이 부러운가?" },
+  { c:"Discover", k:"자랑스러운 일", q:"지금까지 이룬 것 중 가장 자랑스러운 것은 무엇이고, 어떻게 해냈는가?" },
+  { c:"Discover", k:"미루는 일", q:"내가 계속 미루는 일은 무엇이고, 진짜 이유는 무엇일까?" },
+  { c:"Discover", k:"에너지", q:"나는 무엇을 할 때 에너지가 차오르고, 무엇을 할 때 소진될까?" },
+  { c:"Discover", k:"배우고 싶은 것", q:"앞으로 6개월 안에 꼭 배우고 싶은 것은 무엇인가?" },
+  { c:"Discover", k:"부족한 능력", q:"지금의 나에게 가장 부족하다고 느끼는 능력 하나는 무엇인가?" },
+  { c:"Discover", k:"하나만 고른다면", q:"하고 싶은 것 세 가지 중 하나만 고른다면 무엇이고, 왜일까?" },
+  { c:"Discover", k:"포기 못 하는 것", q:"나는 무엇만큼은 포기하고 싶지 않은가?" },
+  { c:"Discover", k:"누구를 위한", q:"내 목표는 누구를 위한 것인가? 나, 가족, 아니면 남의 시선?" },
+  { c:"Define", k:"한 문장 목표", q:"내 목표를 숫자나 기한이 들어간 한 문장으로 쓰면 어떻게 될까?" },
+  { c:"Define", k:"이뤘다는 증거", q:"이 목표를 이루었다는 걸 무엇으로 확인할 수 있을까?" },
+  { c:"Define", k:"기한", q:"이 목표의 기한을 정한다면 언제까지이고, 왜 그 날짜일까?" },
+  { c:"Define", k:"3개월 단위", q:"이 목표를 3개월 단위로 나누면 각 단계는 무엇일까?" },
+  { c:"Define", k:"이번 달 핵심", q:"이번 달에 해야 할 가장 중요한 일 하나는 무엇인가?" },
+  { c:"Define", k:"작은 첫걸음", q:"이번 주에 할 수 있는 가장 작은 첫걸음은 무엇인가?" },
+  { c:"Define", k:"10분 행동", q:"오늘 10분 안에 할 수 있는 행동은 무엇인가?" },
+  { c:"Define", k:"필요한 시간", q:"이 목표에 하루나 일주일에 얼마의 시간이 필요하고, 어디서 확보할까?" },
+  { c:"Define", k:"필요한 자원", q:"이 목표에 필요한 돈이나 도구, 환경은 무엇인가?" },
+  { c:"Define", k:"배워야 할 것", q:"이 목표를 이루려면 무엇을 배워야 할까?" },
+  { c:"Define", k:"도움 요청", q:"도움을 요청할 수 있는 사람은 누구이고, 무엇을 부탁할까?" },
+  { c:"Define", k:"왜 중요한가", q:"이 목표가 나에게 왜 중요한지, '왜?'를 세 번 물어 보면 어떤 답이 나올까?" },
+  { c:"Plan", k:"가장 큰 장애물", q:"이 목표를 방해할 가장 큰 장애물은 무엇인가?" },
+  { c:"Plan", k:"만약 ~하면", q:"장애물이 닥쳤을 때 '만약 ~하면 ~한다'로 어떻게 대응할까?" },
+  { c:"Plan", k:"실패의 이유", q:"이 목표를 이루지 못한다면 가장 큰 이유는 무엇일 것 같은가?" },
+  { c:"Plan", k:"좋은 시간대", q:"하루 중 이 목표에 가장 좋은 시간대는 언제이고, 그 시간을 어떻게 지킬까?" },
+  { c:"Plan", k:"하지 않을 것", q:"이 목표를 위해 하지 않기로 할 것 하나는 무엇인가?" },
+  { c:"Plan", k:"매일 확인", q:"이 목표를 매일 떠올리려면 어떤 방법이 좋을까?" },
+  { c:"Plan", k:"기록 방법", q:"진행 상황을 어떻게 기록하고 점검할까?" },
+  { c:"Plan", k:"보상", q:"한 달 뒤 스스로에게 어떤 보상을 줄까?" },
+  { c:"Plan", k:"나의 환경", q:"내 환경에서 바꾸면 목표가 쉬워지는 것은 무엇인가?" },
+  { c:"Plan", k:"함께할 사람", q:"이 목표를 함께할 사람이 있다면 누구일까?" },
+  { c:"Plan", k:"남에게 말하기", q:"이 목표를 말할 사람이 있다면 누구에게 언제 말할까?" },
+  { c:"Plan", k:"우선순위", q:"내가 놓치고 있는 우선순위는 무엇일까?" },
+  { c:"Act", k:"지난주 점수", q:"지난주 목표를 위해 한 일은 무엇이고, 10점 만점에 몇 점인가?" },
+  { c:"Act", k:"잘한 것", q:"이번 주 가장 잘한 것과 가장 아쉬운 것은 무엇인가?" },
+  { c:"Act", k:"안 된 날", q:"계획대로 안 된 날, 무엇이 방해했는가?" },
+  { c:"Act", k:"너무 크다면", q:"목표가 너무 크게 느껴진다면 어떻게 절반으로 줄일 수 있을까?" },
+  { c:"Act", k:"너무 쉽다면", q:"목표가 너무 쉽게 느껴진다면 어떻게 한 단계 올릴까?" },
+  { c:"Act", k:"나쁜 습관", q:"목표와 맞지 않는 습관은 무엇이고, 어떻게 바꿀까?" },
+  { c:"Act", k:"가장 효과 큰 일", q:"목표 달성을 가장 크게 앞당길 한 가지 행동은 무엇인가?" },
+  { c:"Act", k:"효과 있던 방법", q:"지금까지 해 온 방법 중 효과가 있었던 것은 무엇인가?" },
+  { c:"Act", k:"포기하고 싶을 때", q:"포기하고 싶어질 때 나를 붙잡아 줄 문장은 무엇인가?" },
+  { c:"Act", k:"미래의 나", q:"목표를 이룬 미래의 내가 오늘의 나에게 해 줄 말은 무엇일까?" },
+  { c:"Act", k:"내려놓을 것", q:"이번 달 목표 중 내려놓아도 되는 것은 무엇인가?" },
+  { c:"Review", k:"달성 기준", q:"이번 달 목표를 달성했는지 어떤 기준으로 확인할까?" },
+  { c:"Review", k:"다음 3개월", q:"다음 3개월의 가장 중요한 한 가지는 무엇인가?" },
+  { c:"Review", k:"현실적인 세 가지", q:"올해 남은 기간 동안 가장 현실적인 목표 세 가지는 무엇인가?" },
+  { c:"Review", k:"가장 큰 변화", q:"목표를 위해 내가 바꾼 것 중 가장 큰 변화는 무엇인가?" },
+  { c:"Review", k:"마음에 남은 답", q:"지금까지 쓴 내 답변 중 가장 마음에 남은 것은 무엇인가?" },
+  { c:"Review", k:"다시 쓴 목표", q:"지금 목표를 한 문장으로 다시 쓴다면, 처음과 어떻게 달라졌는가?" },
+  { c:"Review", k:"다음 목표", q:"이 목표를 이루고 난 뒤의 다음 목표는 무엇이 될까?" },
+  { c:"Review", k:"더 중요한 가치", q:"내 삶에서 목표보다 더 중요한 가치는 무엇일까?" },
+  { c:"Review", k:"내년의 나", q:"내년의 나는 올해의 나에게 어떤 점을 고마워할까?" },
+  { c:"Review", k:"90일 약속", q:"오늘부터 90일 동안 매일 하겠다고 약속할 한 가지는 무엇인가?" }
+];
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,"0");
+const keyOf = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
+const now = new Date();
+const TODAY = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
+const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const parseKey = k => { const [y,m,d] = k.split("-").map(Number); return { y, m:m-1, d }; };
+const load = (key, def) => { try { return JSON.parse(localStorage.getItem(key) || def); } catch(e) { return JSON.parse(def); } };
+const store = (key, v) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch(e) {} };
+
+let log = load("goalLog", "{}");      // { date: { q, k, c, free } }
+let locks = load("goalLock", "{}");     // { date: question }
+let rcount = load("goalRefresh", "{}"); // { date: n }
+let drafts = load("goalDraft", "{}");   // { date: { q, free } }
+const MAX_REFRESH = 3;
+
+function startDay() {
+  let v = null;
+  try { v = localStorage.getItem("goalStartDay"); } catch(e) {}
+  if (v == null) {
+    v = String(Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())/86400000));
+    try { localStorage.setItem("goalStartDay", v); } catch(e) {}
+  }
+  return Number(v);
+}
+function questionFor(k) {
+  const fixed = QUESTIONS.find(q => q.q === (log[k] && log[k].q || locks[k]));
+  if (fixed) return fixed;
+  if (log[k]) return { q:log[k].q, k:log[k].k || "", c:log[k].c || "" };
+  const { y, m, d } = parseKey(k);
+  const day = Math.floor(Date.UTC(y,m,d)/86400000);
+  return QUESTIONS[(((day - startDay()) % QUESTIONS.length) + QUESTIONS.length) % QUESTIONS.length];
+}
+const refreshLeft = k => MAX_REFRESH - (rcount[k] || 0);
+function refreshTopic(k) {
+  if (refreshLeft(k) <= 0 || log[k]) return false;
+  const curQ = questionFor(k).q;
+  const pool = QUESTIONS.filter(q => q.q !== curQ);
+  locks[k] = pool[Math.floor(Math.random()*pool.length)].q;
+  rcount[k] = (rcount[k] || 0) + 1;
+  store("goalLock", locks); store("goalRefresh", rcount);
+  return true;
+}
+
+/* ---------- 문장 수 ---------- */
+function countSentences(t) {
+  return (t.match(/[^.!?。\n]+[.!?。]*/g) || []).filter(x => x.trim().length > 1).length;
+}
+
+/* ---------- HOME ---------- */
+function calcStreak() {
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const k = () => keyOf(d.getFullYear(), d.getMonth(), d.getDate());
+  if (!log[k()]) d.setDate(d.getDate()-1);
+  let n = 0;
+  while (log[k()]) { n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+const dayNum = k => { const { y, m, d } = parseKey(k); return Math.floor(Date.UTC(y, m, d)/86400000); };
+const ago = k => dayNum(TODAY) - dayNum(k);
+let ftKey = null;
+function pickFlashback(skip) {
+  const ks = Object.keys(log).filter(k => k !== TODAY && k !== skip);
+  const old = ks.filter(k => ago(k) >= 7);
+  const pool = old.length ? old : ks;
+  return pool.length ? pool[Math.floor(Math.random()*pool.length)] : null;
+}
+function renderFT() {
+  const box = $("ft");
+  if (!ftKey || !log[ftKey]) ftKey = pickFlashback();
+  box.textContent = "";
+  if (!ftKey) { const p = document.createElement("p"); p.className = "empty"; p.textContent = "아직 돌아볼 글이 없어요. 며칠 쓰고 나면 여기에 예전 글이 나타납니다."; box.append(p); return; }
+  const rec = log[ftKey], n = ago(ftKey);
+  const el = (cls, txt, tag = "div") => { const e = document.createElement(tag); e.className = cls; e.textContent = txt; return e; };
+  const ta = document.createElement("textarea"); ta.value = rec.reflect || ""; ta.placeholder = "지금 다시 읽으니 어때요? 달라진 점, 그대로인 점, 한 걸음 더 나간다면…";
+  const save = el("btn main", rec.reflect ? "Update" : "Save", "button");
+  const more = el("btn", "↻ Another", "button");
+  save.onclick = () => { const v = ta.value.trim(); if (!v) return; log[ftKey].reflect = v; store("goalLog", log); save.textContent = "Saved ✓"; setTimeout(() => save.textContent = "Update", 1200); };
+  more.onclick = () => { const nk = pickFlashback(ftKey); if (nk) { ftKey = nk; renderFT(); } };
+  const row = el("row", ""); row.append(save); if (Object.keys(log).filter(k => k !== TODAY).length > 1) row.append(more);
+  box.append(el("when", `${n >= 7 && n % 7 === 0 ? n/7 + "주 전" : n + "일 전"} · ${ftKey.replace(/-/g, ".")}`.toUpperCase()), el("oq", rec.q), el("oa", rec.free || ""), el("ask", "지금의 나는?"), ta, row);
+}
+function renderWeek() {
+  const box = $("wk"); box.textContent = "";
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    const k = keyOf(d.getFullYear(), d.getMonth(), d.getDate()), rec = log[k];
+    const b = document.createElement("button"); b.className = rec ? "" : "none";
+    const mk = (c, t) => { const s = document.createElement("span"); s.className = c; s.textContent = t; return s; };
+    b.append(mk("d", `${pad(d.getMonth()+1)}.${pad(d.getDate())} ${DOW[d.getDay()]}`), mk("t", rec ? (rec.k || "") : (i === 0 ? "오늘은 아직" : "—")), mk("p", rec ? (rec.free || "").replace(/\s+/g, " ") : ""));
+    if (k > TODAY) { b.disabled = true; b.className = "none"; } else b.onclick = () => openCard(k);
+    box.append(b);
+  }
+}
+let viewY = now.getFullYear(), viewM = now.getMonth();
+
+function renderHome() {
+  const q = questionFor(TODAY), rec = log[TODAY];
+  $("hCat").textContent = q.c;
+  $("hQ").textContent = q.q;
+  $("hGo").textContent = rec ? "Review →" : drafts[TODAY] ? "Continue →" : "Start →";
+  const n = refreshLeft(TODAY);
+  $("hChange").textContent = `↻ Change question (${n} left)`;
+  $("hChange").disabled = n <= 0;
+  $("hChange").classList.toggle("hidden", !!rec);
+  $("hDone").textContent = rec ? `✔ Done · ${countSentences(rec.free || "")} sentences` : "";
+  $("streak").textContent = calcStreak();
+  renderFT(); renderWeek();
+  renderCal();
+}
+function renderCal() {
+  $("ym").textContent = `${viewY}.${pad(viewM+1)}`;
+  const first = new Date(viewY, viewM, 1).getDay();
+  const days = new Date(viewY, viewM+1, 0).getDate();
+  let h = DOW.map(d => `<div class="dow">${d}</div>`).join("");
+  for (let i = 0; i < first; i++) h += `<div class="cell empty"></div>`;
+  for (let d = 1; d <= days; d++) {
+    const k = keyOf(viewY, viewM, d), rec = log[k], future = k > TODAY;
+    const cls = ["cell", future && "future", k === TODAY && "today", rec && "done"].filter(Boolean).join(" ");
+    const qq = questionFor(k);
+    const info = rec ? `<span class="cat2">${rec.c || qq.c}</span><span class="kw">${rec.k || qq.k}</span>` : "";
+    const chk = rec ? `<span class="chk">✔</span>` : "";
+    h += `<button class="${cls}" data-k="${k}" ${future ? "disabled" : ""}><span class="top2"><span class="n">${d}</span>${chk}</span><span class="bot">${info}</span></button>`;
+  }
+  $("grid").innerHTML = h;
+  $("grid").querySelectorAll("button.cell:not(.empty)").forEach(b => b.onclick = () => openCard(b.dataset.k));
+}
+$("prev").onclick = () => { if (--viewM < 0) { viewM = 11; viewY--; } renderCal(); };
+$("nextM").onclick = () => { if (++viewM > 11) { viewM = 0; viewY++; } renderCal(); };
+$("hGo").onclick = () => openCard(TODAY);
+$("hChange").onclick = () => { if (refreshTopic(TODAY)) { delete drafts[TODAY]; store("goalDraft", drafts); renderHome(); } };
+
+/* ---------- 카드 ---------- */
+let selKey = TODAY, cur = null, follow = [];
+const MAX_FOLLOW = 10;
+function openCard(k) {
+  if (k > TODAY) return;
+  selKey = k; cur = questionFor(k);
+  if (!locks[k] && !log[k]) { locks[k] = cur.q; store("goalLock", locks); }
+  if (drafts[k] && drafts[k].q !== cur.q) { delete drafts[k]; store("goalDraft", drafts); }
+  const rec = drafts[k] || log[k];
+  $("free").value = rec ? (rec.free || "") : "";
+  follow = rec && Array.isArray(rec.follow) ? rec.follow.map(f => ({ q:f.q, a:f.a || "" })) : [];
+  $("sCat").textContent = cur.c.toUpperCase();
+  $("sQ").textContent = cur.q;
+  renderFollow();
+  paintSwap(); update();
+  $("overlay").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => $("free").focus({ preventScroll:true }), 50);
+}
+function closeCard() {
+  $("overlay").classList.add("hidden");
+  document.body.style.overflow = "";
+  renderHome();
+}
+function paintSwap() {
+  const n = refreshLeft(selKey);
+  $("swap").textContent = `↻ Change question (${n} left)`;
+  $("swap").disabled = n <= 0 || !!log[selKey];
+}
+function update() {
+  const t = $("free").value, n = countSentences(t);
+  $("count").innerHTML = n >= 3 ? `<span class="good">${n} sentences ✓</span>` : `${n} sentences · aim for 3–6`;
+  $("save").disabled = t.trim().length === 0;
+}
+function saveDraft() {
+  if (!selKey || $("overlay").classList.contains("hidden")) return;
+  drafts[selKey] = { q:cur.q, free:$("free").value, follow };
+  store("goalDraft", drafts);
+}
+$("free").addEventListener("input", () => { update(); saveDraft(); });
+$("swap").onclick = () => {
+  if (!refreshTopic(selKey)) return;
+  delete drafts[selKey]; store("goalDraft", drafts);
+  cur = questionFor(selKey);
+  follow = []; renderFollow();
+  $("free").value = ""; $("sCat").textContent = cur.c.toUpperCase(); $("sQ").textContent = cur.q;
+  paintSwap(); update(); $("free").focus();
+};
+/* ---------- AI feedback (optional, OpenAI) ---------- */
+const MODEL = "gpt-4o-mini";
+async function askAI(system, user) {
+  const key = window.OPENAI_API_KEY || "";
+  if (!key) throw new Error("No API key. Open config.js in this folder, paste your OpenAI key between the quotes, save, and reload.");
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + key },
+    body: JSON.stringify({ model:MODEL, temperature:0.5, messages:[{ role:"system", content:system }, { role:"user", content:user }] })
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j.error && j.error.message) || `Request failed (${r.status})`);
+  return j.choices[0].message.content.trim();
+}
+const FB_PROMPT = "당신은 사용자의 목표 달성을 곁에서 돕는 코치입니다. 사용자는 질문에 답하며 목표를 구체화하는 중입니다. 쓴 글을 읽고 후속 질문을 딱 하나만 하세요. 반드시 사용자가 쓴 글의 구체적인 단어나 문장을 짚어서 물어보세요. 질문의 관점은 요청에 적힌 [관점]을 따르세요. 동기: 이게 왜 나에게 중요한지, 이루면 무엇이 달라지는지, 포기하고 싶을 때 무엇이 붙잡아 줄지. 목표: 숫자·기한·확인 기준·첫 행동·장애물. 시간: 남은 날, 하루 중 언제, 15분으로 쪼개기, 시작을 미루면 생기는 차이. 칭찬, 평가, 조언, 문장 수정은 하지 마세요. 이전 후속 질문이 있다면 겹치지 않게 하세요. 질문 한 문장만, '~해?' 같은 친근한 말투로, 따옴표와 번호 없이 답하세요.";
+const ANGLES = ["동기", "목표", "시간"];
+let renewN = 0, busy = false;
+function paintDeeper() {
+  const last = follow[follow.length - 1];
+  $("aiFb").disabled = busy || follow.length >= MAX_FOLLOW || (!!last && !last.a.trim());
+}
+function renderFollow() {
+  const box = $("follow");
+  box.textContent = "";
+  follow.forEach((f, i) => {
+    const d = document.createElement("div"); d.className = "fq";
+    const l = document.createElement("div"); l.className = "fql";
+    const lt = document.createElement("span"); lt.textContent = "FOLLOW-UP";
+    const rn = document.createElement("button"); rn.className = "fdel"; rn.type = "button"; rn.textContent = "↻"; rn.title = "Renew";
+    rn.setAttribute("aria-label", "Renew");
+    rn.disabled = f.a.trim().length > 0 || i < follow.length - 1;
+    rn.onclick = () => makeFollow(i);
+    l.append(lt, rn);
+    const t = document.createElement("div"); t.className = "fqt"; t.textContent = f.q;
+    const ta = document.createElement("textarea"); ta.value = f.a; ta.placeholder = "여기에 이어서 답해 보세요.";
+    ta.addEventListener("input", () => { f.a = ta.value; rn.disabled = f.a.trim().length > 0 || i < follow.length - 1; paintDeeper(); saveDraft(); });
+    d.append(l, t, ta); box.append(d);
+  });
+  $("aiFb").textContent = "Deeper";
+  paintDeeper();
+}
+async function makeFollow(replaceIdx) {
+  const text = $("free").value.trim();
+  const btn = $("aiFb"), box = $("follow");
+  const renew = replaceIdx !== undefined;
+  const showErr = msg => { const e = document.createElement("div"); e.className = "fq err"; e.textContent = msg; box.append(e); };
+  renderFollow();
+  if (!text) { showErr("먼저 몇 문장 써 본 뒤에 물어봐 주세요."); return; }
+  if (renew) { renewN++; box.querySelectorAll(".fdel").forEach(x => x.disabled = true); }
+  busy = true; btn.disabled = true; btn.textContent = "Thinking…";
+  const prev = follow.map((f, i) => `후속 질문 ${i + 1}: ${f.q}${renew && i === replaceIdx ? "\n(이 질문은 마음에 들지 않아 새로 받는 중이니 전혀 다른 질문을 하세요)" : `\n내 답: ${f.a || "(아직 답 안 함)"}`}`).join("\n\n");
+  const left = Math.round((new Date(now.getFullYear(), 11, 31) - new Date(now.getFullYear(), now.getMonth(), now.getDate()))/86400000);
+  const basis = renew ? replaceIdx : follow.length;
+  const deeper = basis > 0 ? `\n\n[지시] 바로 앞 후속 질문에 대한 내 답을 바탕으로, 그 답에서 구체적인 표현을 짚어 한 단계 더 깊이 파고드는 질문을 하세요.` : "";
+  try {
+    const q = (await askAI(FB_PROMPT, `[관점] ${ANGLES[(dayNum(TODAY) + follow.length + renewN) % 3]}\n오늘 ${TODAY}, 올해 남은 날 ${left}일\n\n질문: ${cur.q}\n\n[내 답변]\n${text}` + (prev ? `\n\n[이전 후속 질문]\n${prev}` : "") + deeper)).replace(/^["'“”\s]+|["'“”\s]+$/g, "");
+    busy = false;
+    if (renew) follow[replaceIdx] = { q, a:"" }; else follow.push({ q, a:"" });
+    saveDraft(); renderFollow();
+    const tas = box.querySelectorAll("textarea"); if (tas.length) tas[tas.length - 1].focus({ preventScroll:true });
+    box.lastElementChild.scrollIntoView({ behavior:"smooth", block:"nearest" });
+  } catch(e) { busy = false; renderFollow(); showErr("⚠ " + e.message); }
+}
+$("aiFb").onclick = () => makeFollow();
+function showStreak(n) {
+  const t = $("toast");
+  $("toastN").textContent = n;
+  t.classList.remove("show"); void t.offsetWidth;
+  t.classList.add("show");
+}
+$("save").onclick = () => {
+  const text = $("free").value.trim();
+  if (!text) return;
+  const firstTime = !log[selKey];
+  log[selKey] = { q:cur.q, k:cur.k, c:cur.c, free:text, reflect:(log[selKey] && log[selKey].reflect) || undefined, follow:follow.filter(f => f.q) };
+  store("goalLog", log);
+  delete drafts[selKey]; store("goalDraft", drafts);
+  closeCard();
+  if (firstTime) showStreak(calcStreak());
+};
+$("close").onclick = () => { saveDraft(); closeCard(); };
+document.addEventListener("keydown", e => {
+  if (!$("overlay").classList.contains("hidden") && e.key === "Escape") { saveDraft(); closeCard(); }
+});
+
+$("today").textContent = `${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()} · One question a day. Make your goal concrete.`;
+renderHome();
+</script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘의 억만장자</title>
+<style>
+  body { font-family: -apple-system, "Apple SD Gothic Neo", sans-serif; background: #111; color: #eee; margin: 0; padding: 24px 16px; }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  .date { color: #888; font-size: 14px; margin-bottom: 12px; }
+  .bar { height: 4px; background: #2a2a2a; border-radius: 2px; margin-bottom: 12px; overflow: hidden; }
+  .bar div { height: 100%; width: 0; background: #f5c518; transition: width .25s; }
+  .track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; scrollbar-width: none; }
+  .track::-webkit-scrollbar { display: none; }
+  .slide { flex: 0 0 100%; scroll-snap-align: start; box-sizing: border-box; background: #1c1c1c; border-radius: 16px; padding: 28px 24px; min-height: 340px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
+  .label { color: #f5c518; font-size: 13px; letter-spacing: 1px; margin-bottom: 14px; }
+  .text { font-size: 20px; line-height: 1.6; }
+  .cover h1 { font-size: 32px; margin: 0 0 8px; }
+  .cover .meta { font-size: 18px; color: #ccc; line-height: 1.7; }
+  .cover .item { margin-top: 14px; font-size: 20px; color: #f5c518; }
+  .lesson .text { font-weight: 700; }
+  a { color: #6cb6ff; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 130px; background: #262626; color: #eee; border: 1px solid #333; border-radius: 12px; padding: 12px; font: inherit; font-size: 16px; line-height: 1.5; resize: vertical; }
+  .saved { color: #888; font-size: 12px; height: 16px; margin-top: 6px; }
+  .nav { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; color: #888; font-size: 13px; }
+  .nav button { background: #333; color: #eee; border: 0; border-radius: 8px; width: 44px; height: 36px; font-size: 18px; cursor: pointer; }
+  .nav button:disabled { opacity: .3; cursor: default; }
+
+  .home-title { font-size: 34px; font-weight: 800; letter-spacing: -1px; margin: 0; }
+  .date { color: #777; font-size: 13px; margin: 4px 0 0; }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .streak { border: 1px solid #f5c518; color: #f5c518; border-radius: 4px; padding: 5px 10px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; margin-top: 4px; }
+  .streak b { font-size: 16px; margin-left: 4px; }
+  .hero { margin: 24px 0 8px; padding: 28px 24px; border-radius: 4px; background: #f5c518; color: #111; cursor: pointer; }
+  .hero .label { color: #111; opacity: .6; margin: 0 0 18px; }
+  .hero h2 { margin: 0; font-size: 40px; letter-spacing: -1px; line-height: 1.1; }
+  .hero .meta { margin-top: 12px; font-size: 15px; line-height: 1.5; font-weight: 500; }
+  .hero .go { margin-top: 20px; font-size: 13px; font-weight: 700; }
+  .sec { font-size: 12px; color: #777; letter-spacing: 2px; text-transform: uppercase; margin: 36px 0 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; }
+  .sec span { display: flex; align-items: center; gap: 8px; }
+  .sec button { background: none; color: #eee; border: 1px solid #333; border-radius: 4px; width: 28px; height: 26px; cursor: pointer; }
+  .dow, .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .dow div { color: #555; font-size: 11px; padding: 0 2px 4px; }
+  .day { border: 1px solid #222; border-radius: 4px; padding: 6px; min-height: 68px; font-size: 11px; color: #555; position: relative; box-sizing: border-box; }
+  .day.empty { border-color: transparent; }
+  .day.open { cursor: pointer; color: #999; border-color: #2e2e2e; }
+  .day.open:hover { border-color: #f5c518; }
+  .day .nm { display: block; margin-top: 6px; color: #eee; font-size: 12px; font-weight: 600; line-height: 1.25; word-break: keep-all; }
+  .day.today { background: #f5c518; border-color: #f5c518; color: #111; }
+  .day.today .nm { color: #111; }
+  .day .dot { position: absolute; top: 7px; right: 7px; width: 5px; height: 5px; border-radius: 50%; background: #f5c518; }
+  .day.today .dot { background: #111; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .gcard { border: 1px solid #2a2a2a; border-radius: 4px; padding: 14px; cursor: pointer; }
+  .gcard:hover { border-color: #f5c518; }
+  .gcard .no { color: #f5c518; font-size: 11px; letter-spacing: 1px; }
+  .gcard .nm { margin-top: 10px; font-size: 17px; font-weight: 700; }
+  .gcard .it { margin-top: 4px; font-size: 12px; color: #888; line-height: 1.4; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .notebtn { background: none; border: 1px solid #333; color: #eee; border-radius: 4px; padding: 5px 10px; font-size: 13px; cursor: pointer; }
+  .notebtn.has::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #f5c518; margin-right: 6px; }
+  .back { background: none; border: 0; color: #6cb6ff; font-size: 14px; cursor: pointer; padding: 0; }
+  .dnav { --n-ink:#eee; --n-mut:#777; --n-acc:#f5c518; display:flex; justify-content:flex-end; gap:4px; margin:0 auto 14px; padding:0; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; font-family:-apple-system,"Apple SD Gothic Neo",sans-serif; }
+  .dnav a { color:var(--n-mut); text-decoration:none; padding:4px 0; margin-left:14px; border-bottom:2px solid transparent; }
+  .dnav a:hover { color:var(--n-ink); }
+  .dnav a[aria-current] { color:var(--n-ink); border-bottom-color:var(--n-acc); pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="wrap" style="padding-bottom:0"><nav class="dnav"><a href="daily-writing.html">Writing</a><a href="daily-goal.html">Goal</a><a href="daily-billionaire.html" aria-current="page">Billionaire</a><a href="daily-spending.html">Spending</a><a href="daily-time.html">Time</a></nav></div>
+<div class="wrap" id="app"></div>
+<script>
+// 사람 추가하려면 이 배열에 객체 하나만 더 넣으면 됨
+const STORIES = [
+  {
+    name: "Jeff Bezos",
+    year: "1994년", age: "30살", place: "미국 뉴욕 → 시애틀",
+    item: "온라인 서점 (Amazon)",
+    when: "뉴욕 헤지펀드 D. E. Shaw 부사장. 연봉 빵빵했음",
+    idea: "인터넷 사용량이 1년에 2,300%씩 늘어난다는 통계를 봄. \"이 위에서 뭘 팔지?\" 하다가 책을 고름",
+    start: [
+      "사장 데이비드 쇼한테 인터넷 서점 얘기했더니 \"좋은 아이디어인데, 이미 좋은 직장 있는 사람한테는 별로\"라는 답이 돌아옴",
+      "이틀 고민하다가 80살의 자신을 상상해봄. 실패해도 후회 안 하겠지만, 시도조차 안 하면 평생 후회할 것 같았음",
+      "아내와 텍사스에서 차를 받아 시애틀까지 몰고 가는 동안, 아내가 운전하고 본인은 사업계획서를 씀",
+      "시애틀을 고른 이유는 개발자가 많고, 큰 도서 도매상이 가깝고, 인구가 적은 주라 세금이 유리해서임",
+      "차고에는 책상이 없어서 문짝을 떼서 책상으로 씀. 포장은 시멘트 바닥에서 무릎이 아파가며 함",
+      "처음 이름은 Cadabra였는데 변호사가 \"cadaver(시체)\"로 알아들어서 Amazon으로 바꿈",
+      "종잣돈은 부모님이 약 25만 달러를 냄. 1995년 7월 사이트 오픈"
+    ],
+    early: [
+      "\"지구에서 가장 큰 서점\"이라고 내세웠지만 재고는 거의 없었음. 주문이 들어오면 도매상에서 책을 받아 포장해서 보냄",
+      "투자자 20여 명을 직접 만나 약 100만 달러를 모음. 그때 \"성공 확률 30%\"라고 솔직하게 말했다고 함",
+      "오픈 첫 30일 동안 광고 없이 미국 50개 주 + 45개국에 팔림. 처음엔 주문 들어올 때마다 종을 쳤는데, 너무 많아져서 그만둠",
+      "1995년 9월엔 주 매출이 약 2만 달러로 오름. Yahoo 소개와 입소문 덕분",
+      "1996년 제휴 프로그램(Associates)을 만들어서 남의 블로그·사이트가 링크를 걸면 수수료를 줌. 광고비 없이 유입을 늘림",
+      "1996년 벤처투자사 Kleiner Perkins에서 800만 달러 투자 → 1997년 상장. 매출은 약 1,570만 달러(1996) → 약 1억 4,800만 달러(1997)"
+    ],
+    growth: "1997 상장 → 2000 닷컴 폭락 → 2001 첫 흑자 → AWS",
+    now: "자산 2,000억 달러 안팎(대략). 우주회사 Blue Origin에 집중",
+    lesson: "안정적인 자리를 버림. 기준은 \"80살에 후회할까?\"",
+    video: { title: "Jeff Bezos - The Regret Minimization Framework", url: "https://www.youtube.com/watch?v=bQWr8ovbxF4" }
+  },
+  {
+    name: "Jack Ma",
+    year: "1995년", age: "30살", place: "중국 항저우 (창업은 1999년, 34살)",
+    item: "중국 기업 B2B 마켓 (Alibaba)",
+    when: "월급 몇십 달러 영어 강사. KFC도 떨어졌음",
+    idea: "통역으로 미국에 가서 처음 인터넷 봄. \"beer\" 검색했는데 중국 맥주가 0개. \"중국 기업을 인터넷에 올리자\"",
+    start: [
+      "1995년, 통역으로 미국 시애틀에 갔다가 친구가 인터넷을 보여줌",
+      "귀국하자마자 빚내서 회사(China Pages)를 차렸는데, 처음엔 주변에서 사기꾼 취급을 받음",
+      "1999년 2월, 자기 아파트에 친구 17명을 불러서 2시간 동안 비전을 설명함",
+      "그 자리에서 각자 돈을 내놓게 했고, 모인 돈은 약 50만 위안(약 6만 달러)이었음. 코딩은 못 했음",
+      "그해 10월 골드만삭스에서 500만 달러, 다음 해 손정의에게 2,000만 달러(면담 6분 만에 결정)를 받음"
+    ],
+    early: [
+      "China Pages 시절: 미국 친구가 만든 사이트에 중국 기업 정보를 올렸더니 몇 시간 만에 이메일 답장이 옴. \"인터넷이 진짜 되네\"라고 확신함",
+      "China Pages는 국영 통신사와 합작이 되면서 주도권을 잃음. 1997년 나와서 베이징 정부 부처에서 전자상거래 일을 하다가, 1999년 다시 항저우로 돌아옴",
+      "Alibaba는 중국 중소 수출업체와 해외 바이어를 연결하는 B2B 사이트. 일부러 소비자 대신 중소기업 쪽을 골랐음",
+      "초기엔 직원 월급이 아주 적었고 아파트에서 밤낮으로 일함. 처음엔 무료로 올리게 해서 회원부터 모음",
+      "2000~2001년 닷컴 붕괴로 직원을 줄이고 비용을 깎음. 그 뒤 유료 회원제(China Supplier, TrustPass)를 붙여서 매출이 나기 시작함",
+      "2002년 \"딱 1위안이라도 흑자를 내자\"가 목표였고, 실제로 그해 흑자를 냈다고 알려짐(출처마다 표현 다름)"
+    ],
+    growth: "Taobao → Alipay → 2014 뉴욕 상장",
+    now: "앤트그룹 상장이 막힌 뒤 조용히 지냄. 자산 200~300억 달러(대략)",
+    lesson: "기술 몰라도 문제만 보이면 시작할 수 있음",
+    video: { title: "Jack Ma speech to 17 friends in his apartment in 1999", url: "https://www.youtube.com/watch?v=vab8qXQnius" }
+  },
+  {
+    name: "Elon Musk",
+    year: "1995년", age: "24살", place: "미국 캘리포니아 팰로앨토",
+    item: "지역 정보 + 지도 서비스 (Zip2)",
+    when: "스탠퍼드 박사과정에 합격했지만 이틀 만에 휴학하고 나옴",
+    idea: "인터넷이 막 열리던 때, 신문사·지역 업체가 온라인에 올라갈 방법이 없다고 봄. \"업체 정보 + 지도 + 길찾기\"를 파는 회사를 구상",
+    start: [
+      "동생 킴벌과 함께 시작. 아버지한테 약 2만 8천 달러를 받았다고 알려져 있음",
+      "사무실은 월세가 싼 작은 방. 밤에는 사무실 바닥에서 자고, 샤워는 근처 YMCA에서 했다고 함",
+      "직접 코딩을 거의 다 짬. 낮에는 영업 미팅, 밤에는 코딩의 반복",
+      "투자자 앞에서 \"이거 만들었다\"를 보여주려고 시제품부터 빨리 만듦"
+    ],
+    early: [
+      "처음엔 업체들을 직접 찾아다니며 설득했지만 잘 안 됐음. 그러다 신문사에 소프트웨어를 파는 쪽으로 방향을 바꿈",
+      "시카고 트리뷴, 나이트리더 같은 신문사와 계약. 신문사들이 자기 사이트에 Zip2 기술을 가져다 씀",
+      "1996년 벤처투자사 Mohr Davidow에서 약 300만 달러를 받음. 대신 경영은 외부 CEO에게 넘어갔고 Musk는 CTO로 물러남",
+      "1999년 Compaq이 Zip2를 약 3억 700만 달러에 인수. Musk 몫은 약 2,200만 달러(알려진 수치)"
+    ],
+    growth: "Zip2 매각 → X.com(PayPal) → SpaceX, Tesla",
+    now: "Tesla, SpaceX, xAI 등을 이끎. 자산은 수천억 달러대(주가에 따라 크게 변함)",
+    lesson: "첫 회사에서 번 돈을 바로 다음 큰 베팅에 다시 넣음. 첫 성공에서 멈추지 않음",
+    video: { title: "Elon Musk Zip2 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Elon+Musk+Zip2+story" }
+  },
+  {
+    name: "Bill Gates",
+    year: "1975년", age: "19살", place: "미국 뉴멕시코 앨버커키",
+    item: "컴퓨터용 프로그래밍 언어 (Microsoft, Altair BASIC)",
+    when: "하버드 대학 2학년. 수업보다 컴퓨터실에 있는 시간이 더 길었음",
+    idea: "잡지에서 개인용 컴퓨터 Altair 8800 기사를 봄. \"이 컴퓨터에는 소프트웨어가 필요하겠구나\" 하고 친구 폴 앨런과 바로 움직임",
+    start: [
+      "컴퓨터 제조사 MITS에 전화해서 \"우리가 Altair용 BASIC을 만들었다\"고 말함. 사실은 아직 한 줄도 없었음",
+      "Altair 실물은 없어서, 하버드의 대형 컴퓨터로 Altair를 흉내 내는 프로그램부터 만들고 그 위에서 BASIC을 짬. 약 8주 걸림",
+      "앨런이 비행기로 앨버커키에 가서 처음 실제 Altair에 올려봤는데 첫 시도에서 돌아갔다고 함",
+      "1975년 4월 Microsoft라는 이름으로 회사 시작. 게이츠는 하버드를 휴학함"
+    ],
+    early: [
+      "MITS와 라이선스 계약. 팔릴 때마다 로열티를 받는 구조",
+      "Altair용 BASIC이 퍼지면서, 해적판이 돌자 게이츠가 \"취미 개발자에게 보내는 공개 편지\"를 써서 소프트웨어도 돈 내고 써야 한다고 주장함",
+      "1980년 IBM이 PC용 OS를 찾음. Microsoft는 다른 회사 OS(QDOS)를 사서 다듬어 MS-DOS로 공급",
+      "핵심은 IBM에 소프트웨어를 통째로 팔지 않고 라이선스만 준 것. 그 뒤 IBM 호환 PC가 늘수록 Microsoft도 같이 커짐"
+    ],
+    growth: "1986 상장 → Windows → Office → 은퇴 후 재단 활동",
+    now: "Microsoft 경영에서는 물러났고 Gates 재단 중심으로 기부 활동. 자산 1,000억 달러대",
+    lesson: "아직 없는 것을 먼저 말하고, 약속한 날까지 만들어냄",
+    video: { title: "Bill Gates Microsoft 창업 이야기 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Bill+Gates+Paul+Allen+Altair+BASIC+story" }
+  },
+  {
+    name: "Steve Jobs",
+    year: "1976년", age: "21살", place: "미국 캘리포니아 로스앨터스 (부모님 집 차고)",
+    item: "개인용 컴퓨터 (Apple)",
+    when: "대학(리드칼리지)을 6개월 만에 그만두고 아타리에서 일하고 있었음",
+    idea: "친구 스티브 워즈니악이 만든 컴퓨터 보드를 보고 \"이걸 회로 기판째로 팔자\"고 제안함. 만든 건 워즈니악, 파는 건 잡스",
+    start: [
+      "잡스는 폭스바겐 미니버스를, 워즈니악은 HP 계산기를 팔아서 합쳐 약 1,300달러를 마련했다고 알려져 있음",
+      "1976년 4월 Apple 설립. 이름은 잡스가 사과 농장에 다녀온 뒤 지었다고 함",
+      "집 차고에서 기판을 조립. 가족과 친구들도 일을 거듦",
+      "전자 부품은 외상으로 가져옴. 갚을 돈은 나중에 팔아서 해결하는 구조"
+    ],
+    early: [
+      "동네 컴퓨터 가게 Byte Shop 사장이 Apple I을 50대 주문. 대신 \"기판 말고 완성품으로\" 요구함. 총 약 2만 5천 달러짜리 주문",
+      "그 주문서를 들고 부품 회사를 찾아가 외상을 받아내 제작을 시작함",
+      "투자자 마이크 마크쿨라가 약 25만 달러를 투입(출자+대출). 1977년 Apple II 공개",
+      "Apple II가 잘 팔리면서 1980년 상장. 잡스는 20대에 큰 부자가 됨"
+    ],
+    growth: "Apple II → Macintosh → 1985 쫓겨남 → 1997 복귀 → iPod, iPhone",
+    now: "2011년 사망. Apple은 지금 세계 최대급 기업",
+    lesson: "만드는 사람과 파는 사람이 짝을 이룸. 주문서부터 받고 시작함",
+    video: { title: "Steve Jobs Stanford 졸업식 연설 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Steve+Jobs+Stanford+commencement+speech+2005" }
+  },
+  {
+    name: "Warren Buffett",
+    year: "1956년", age: "25살", place: "미국 네브래스카 오마하",
+    item: "투자조합 (Buffett Partnership → Berkshire Hathaway)",
+    when: "스승 벤저민 그레이엄의 회사에서 일하다가 고향으로 돌아옴",
+    idea: "싸게 사서 오래 가지고 있는다. 어릴 때부터 하던 방식 그대로 남의 돈으로도 해보기로 함",
+    start: [
+      "어릴 때부터 껌, 콜라를 팔고 신문 배달을 함. 11살에 첫 주식을 샀고, 14살에는 모은 돈으로 농지를 샀다고 알려져 있음",
+      "컬럼비아 대학원에서 그레이엄의 가치투자를 배우고 그의 회사에서 2년 일함",
+      "1956년 가족과 친구 7명에게서 약 10만 달러를 모아 투자조합을 시작함. 본인은 100달러만 냄",
+      "처음엔 집 침실을 사무실로 씀"
+    ],
+    early: [
+      "조합원들에게 \"수익이 연 6%를 넘는 부분만 수수료로 받겠다\"는 조건을 둠. 못 벌면 본인은 한 푼도 못 받음",
+      "수익이 나자 소문이 나서 조합이 늘어남. 1960년대에 여러 조합을 하나로 합침",
+      "1960년대 중반 망해가던 직물회사 Berkshire Hathaway를 인수함",
+      "1969년 조합을 해산하고, 그 뒤로는 Berkshire를 투자 지주회사로 키움"
+    ],
+    growth: "GEICO, 코카콜라, 애플 등에 장기 투자 → Berkshire는 세계 최대급 기업",
+    now: "90대 중반. 자산은 1,000억 달러대. 재산의 대부분을 기부하겠다고 약속함",
+    lesson: "남의 돈을 맡을 때 \"내가 못 벌면 나도 못 받는다\"는 조건을 직접 내걸었음",
+    video: { title: "Warren Buffett 어린 시절 이야기 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Warren+Buffett+early+life+Buffett+Partnership+story" }
+  },
+  {
+    name: "Mark Zuckerberg",
+    year: "2004년", age: "19살", place: "미국 매사추세츠 케임브리지 (하버드 기숙사)",
+    item: "대학생 온라인 인맥 사이트 (Facebook)",
+    when: "하버드 2학년. 전해엔 학교 학생들 사진을 비교하는 사이트(Facemash)를 만들어 징계 위기를 겪음",
+    idea: "하버드엔 학생 얼굴·정보를 모아둔 종이 책자(facebook)가 있었는데 온라인에는 없었음. \"그걸 직접 만들면 되겠네\"",
+    start: [
+      "2004년 2월 기숙사에서 thefacebook.com을 열고, 며칠 만에 하버드 학부생의 절반 가까이 가입했다고 함",
+      "친구 에두아르도 세버린이 사업 쪽을 맡고 약 1만 5천 달러를 냈다고 알려져 있음",
+      "몇 주 만에 다른 대학(스탠퍼드, 예일 등)으로 확대. 학교 이메일이 있어야 가입 가능한 구조라서 \"진짜 사람\"이라는 신뢰가 있었음",
+      "그해 여름 팰로앨토로 옮겨서 회사 형태로 일함"
+    ],
+    early: [
+      "Peter Thiel이 약 50만 달러를 투자(2004). 이후 Accel에서 약 1,270만 달러(2005)",
+      "이름에서 \"the\"를 빼고 facebook.com으로 도메인을 사들임(약 20만 달러)",
+      "2006년 고등학교, 회사 → 일반인으로 가입을 확대. 뉴스피드를 도입해 사용 시간이 크게 늘었지만 처음엔 반발도 컸음",
+      "2006년 Yahoo의 10억 달러 인수 제안을 거절함"
+    ],
+    growth: "2012 상장 → Instagram, WhatsApp 인수 → Meta로 사명 변경",
+    now: "Meta CEO. 자산은 수천억 달러대(주가에 따라 변동)",
+    lesson: "작은 한 집단(하버드)에서 먼저 쓰게 만들고, 거기서 퍼뜨림",
+    video: { title: "Mark Zuckerberg Facebook 초기 이야기 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Mark+Zuckerberg+Facebook+Harvard+dorm+early+story" }
+  },
+  {
+    name: "Larry Page & Sergey Brin",
+    year: "1998년", age: "25살", place: "미국 캘리포니아 멘로파크 (친구 집 차고)",
+    item: "검색 엔진 (Google)",
+    when: "스탠퍼드 박사과정 학생. 연구 프로젝트 BackRub으로 시작",
+    idea: "웹페이지는 \"누가 얼마나 많이 링크를 걸었는지\"로 순위를 매기면 더 정확하다는 아이디어(PageRank)",
+    start: [
+      "1996년 스탠퍼드 기숙사에서 연구용으로 시작. 학교 서버를 너무 많이 써서 학교 네트워크가 느려질 정도였음",
+      "이름은 숫자 10의 100제곱을 뜻하는 \"googol\"에서 따옴. 철자를 잘못 써서 google이 됐다는 얘기가 있음",
+      "1998년 투자자 앤디 벡톨샤임에게 시연을 보였더니 그 자리에서 10만 달러짜리 수표를 \"Google Inc.\" 앞으로 써줌. 아직 회사가 없어서 한동안 입금을 못 했음",
+      "가족·친구에게서도 돈을 더 모아 약 100만 달러를 확보. 멘로파크 차고를 빌려서 회사로 씀"
+    ],
+    early: [
+      "전에 먼저 검색 기술을 Excite 등에 약 100만 달러에 팔려고 했지만 거절당함",
+      "광고 없는 깔끔한 첫 화면이 입소문을 탐. 1999년 Kleiner Perkins와 Sequoia에서 2,500만 달러를 투자받음",
+      "2000년 검색어와 연결된 텍스트 광고(AdWords)를 도입. 이게 수익 모델이 됨",
+      "2004년 상장"
+    ],
+    growth: "Gmail, Android, YouTube 인수 → 2015 Alphabet 출범",
+    now: "두 사람 모두 경영에서 한발 물러남. 각각 1,000억 달러대 자산",
+    lesson: "연구실의 아이디어를 \"쓰는 사람이 직접 느끼는 품질\"로 증명함",
+    video: { title: "Larry Page & Sergey Brin Google 창업 이야기 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Larry+Page+Sergey+Brin+Google+garage+founding+story" }
+  },
+  {
+    name: "Jensen Huang",
+    year: "1993년", age: "30살", place: "미국 캘리포니아 산호세 (Denny's 식당)",
+    item: "3D 그래픽 칩 (NVIDIA)",
+    when: "반도체 회사 LSI Logic의 엔지니어. 10대 때는 Denny's에서 접시 닦이 겸 서빙을 했음",
+    idea: "게임·3D 그래픽이 앞으로 큰 시장이 될 거라고 봄. 그 계산을 하는 전용 칩을 만들자",
+    start: [
+      "동료 Chris Malachowsky, Curtis Priem과 동네 Denny's 구석 자리에서 몇 번 만나 회사 계획을 짬",
+      "1993년 4월 NVIDIA 설립. 처음 자본금은 약 4만 달러라고 알려져 있음",
+      "이름은 \"invidia(질투)\"에서 따옴. 처음 파일 이름을 NV라고 붙였다가 이름이 됨",
+      "투자자 Sequoia 등에서 초기 투자를 받음"
+    ],
+    early: [
+      "첫 칩 NV1은 시장 규격과 안 맞아 거의 안 팔림. 1996년엔 회사가 한 달 치 자금밖에 안 남았던 적이 있다고 본인이 말함",
+      "게임 회사 Sega가 계약을 취소하는 대신 약 500만 달러를 투자해줘서 한숨 돌림",
+      "1997년 RIVA 128을 내놓으며 반전. 3D 가속에 규격을 맞추자 팔리기 시작함",
+      "1999년 GeForce 256 출시, 같은 해 상장"
+    ],
+    growth: "GeForce → CUDA(2006) → 딥러닝 → AI 칩 붐",
+    now: "NVIDIA CEO. 세계 최대급 시가총액 회사. 본인 자산은 1,000억 달러대",
+    lesson: "첫 제품이 망해도 규격을 고쳐서 다시 나옴. 한 달 치 돈이 남았어도 방향을 바꿔 살아남음",
+    video: { title: "Jensen Huang NVIDIA 창업 이야기 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Jensen+Huang+Denny%27s+NVIDIA+founding+story" }
+  },
+  {
+    name: "Sara Blakely",
+    year: "1998년", age: "27살", place: "미국 조지아 애틀랜타",
+    item: "발 없는 보정 스타킹 (Spanx)",
+    when: "팩스기를 방문 판매하는 영업사원. 7년 동안 하루 종일 돌아다님",
+    idea: "하얀 바지 안에 입을 마땅한 속옷이 없어서 스타킹의 발 부분을 잘라서 입어봄. \"이거 파는 사람이 없네?\"",
+    start: [
+      "모아둔 돈은 약 5,000달러뿐. 퇴근 후와 주말에 아이디어를 다듬음",
+      "특허 변호사 비용이 아까워서 처음엔 직접 특허 서류를 씀",
+      "스타킹 공장 여러 곳에 연락했지만 \"여자가 뭘 안다고\" 식으로 다 거절당함",
+      "한 공장 사장이 딸들 의견을 듣고 마음을 바꿔 생산을 맡아줌"
+    ],
+    early: [
+      "이름을 Spanx로 지음. 웃음이 나는 K 소리가 들어가야 기억에 남는다는 생각",
+      "고급 백화점 Neiman Marcus에 직접 찾아가 매장 화장실에서 입어 보이며 설득. 일부 매장에서 먼저 팔기 시작함",
+      "2000년 Oprah가 \"올해 좋아하는 것\"으로 소개하면서 폭발적으로 팔림",
+      "투자자 없이 혼자 운영해서 지분을 지킴. 아버지가 어릴 때 \"이번 주엔 뭘 실패했니?\"라고 묻던 교육이 도움이 됐다고 함"
+    ],
+    growth: "속옷 → 레깅스, 의류 → 2021년 Blackstone에 대부분 지분 매각 (기업가치 약 12억 달러)",
+    now: "Spanx 창업자. 투자 및 자선 활동",
+    lesson: "작은 불편을 그냥 넘기지 않음. 거절당한 횟수를 실패가 아니라 시도로 셈",
+    video: { title: "Sara Blakely Spanx 창업 이야기 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Sara+Blakely+Spanx+founding+story" }
+  },
+  {
+    name: "Phil Knight",
+    year: "1964년", age: "26살", place: "미국 오리건 포틀랜드",
+    item: "러닝화 수입·판매 (Blue Ribbon Sports → Nike)",
+    when: "회계사로 일하면서 달리기 선수 출신이었음. 스탠퍼드 MBA 때 쓴 리포트가 시작이었음",
+    idea: "카메라 시장처럼 일본 제품이 독일 제품(Adidas)을 이길 수 있다. 일본 러닝화를 미국에 싸게 팔자",
+    start: [
+      "1962년 일본 고베로 가서 Onitsuka Tiger 사무실을 찾아감. 미리 \"Blue Ribbon Sports\"라는 이름을 지어서 \"미국 대리점\"이라고 소개함. 회사는 아직 없었음",
+      "샘플 신발을 주문했고, 받은 신발을 코치 빌 바우어만에게 보여줌. 바우어만은 마음에 들어 동업자가 됨",
+      "1964년 둘이 각자 500달러를 내서 첫 주문을 넣음",
+      "신발 상자를 차 트렁크에 싣고 육상 대회장을 돌며 직접 팔았음. 회계사 일은 그만두지 않음"
+    ],
+    early: [
+      "첫 해 매출은 약 8,000달러. 그 돈을 전부 다시 신발 주문에 넣음",
+      "은행에서 대출을 받아 재고를 늘렸는데 은행이 계속 한도를 막아서 늘 현금이 부족했음",
+      "1971년 공급처인 Onitsuka와 갈라서고 자체 브랜드 Nike 시작. 로고 \"스우시\"는 학생 디자이너에게 35달러를 주고 받음",
+      "1980년 상장"
+    ],
+    growth: "Nike Air → Michael Jordan 계약(1984) → 세계 최대 스포츠 브랜드",
+    now: "80대. 자서전 \"Shoe Dog\"를 씀. 자산 300억 달러대",
+    lesson: "회사가 아직 없어도 이름부터 내세우고 샘플부터 받음. 번 돈은 전부 재고에 다시 넣음",
+    video: { title: "Phil Knight Shoe Dog 이야기 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Phil+Knight+Shoe+Dog+Blue+Ribbon+Sports+story" }
+  },
+  {
+    name: "Masayoshi Son",
+    year: "1981년", age: "24살", place: "일본 후쿠오카 / 도쿄",
+    item: "소프트웨어 유통 (SoftBank)",
+    when: "16살 때 혼자 미국으로 유학. 버클리 대학에서 경제학을 공부했고 학생 때 이미 발명품으로 돈을 벌었음",
+    idea: "컴퓨터가 퍼지면 소프트웨어를 모아서 가게에 공급하는 유통업이 필요해진다고 봄",
+    start: [
+      "버클리 시절 \"음성 번역기\"를 구상해서 교수들과 만들고, 일본 Sharp에 약 100만 달러에 팔았다고 알려져 있음",
+      "일본으로 돌아와 1981년 SoftBank 설립. 직원은 아르바이트 두 명뿐이었음",
+      "사무실 첫 날 귤 상자 위에 올라가 \"앞으로 이 회사는 조 단위로 커진다\"고 연설했고, 직원 둘은 그날 바로 그만뒀다는 일화가 있음",
+      "소프트웨어 제조사에 \"전부 우리를 통해 팔라\"고 설득해 유통 계약을 따냄"
+    ],
+    early: [
+      "컴퓨터 잡지를 만들어서 광고 매출과 독자 접점을 확보함",
+      "일본 유통 시장에서 점점 점유율을 늘림. 1994년 상장",
+      "1996년 막 시작한 Yahoo에 투자하고 Yahoo Japan을 세움",
+      "2000년 Jack Ma를 6분 만에 만나 Alibaba에 2,000만 달러 투자. 이 투자가 크게 불어남"
+    ],
+    growth: "Yahoo, Alibaba 투자 → 2006 Vodafone Japan 인수 → ARM 인수 → Vision Fund",
+    now: "SoftBank 그룹 회장. 자산은 수백억 달러대(주가·투자 평가에 따라 크게 변동)",
+    lesson: "아무것도 없을 때 큰 숫자를 말로 먼저 내걸고, 그걸 맞추려고 움직임",
+    video: { title: "Masayoshi Son SoftBank 창업 이야기 (YouTube 검색)", url: "https://www.youtube.com/results?search_query=Masayoshi+Son+SoftBank+founding+story" }
+  }
+];
+
+// 나중에 질문을 바꾸고 싶으면 여기만 고치면 됨
+const QUESTION = "이 사람의 시작에서 내가 당장 따라할 수 있는 한 줄은?";
+
+const app = document.getElementById("app");
+const DAY = 86400000;
+const dayNum = d => Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()) / DAY);
+// 시작일: 이 날부터 하루에 한 명씩 열림 (그 전 날짜는 비어있음)
+const START = new Date(2026, 8, 29);
+const personIdx = d => ((dayNum(d) - dayNum(START)) % STORIES.length + STORIES.length) % STORIES.length;
+const today = new Date();
+const hasNote = idx => { try { return !!localStorage.getItem("note:" + STORIES[idx].name); } catch (e) { return false; } };
+
+// 스트릭: 앱을 연 날짜를 기록해서 연속 일수를 셈
+function loadVisits() { try { return JSON.parse(localStorage.getItem("visits") || "[]"); } catch (e) { return []; } }
+function recordVisit() {
+  const v = loadVisits(), n = dayNum(today);
+  if (!v.includes(n)) { v.push(n); try { localStorage.setItem("visits", JSON.stringify(v)); } catch (e) {} }
+  return new Set(v.concat(n));
+}
+function streaks(set) {
+  let cur = 0; for (let n = dayNum(today); set.has(n); n--) cur++;
+  let best = 0, run = 0, prev = null;
+  [...set].sort((a, b) => a - b).forEach(n => { run = prev !== null && n === prev + 1 ? run + 1 : 1; prev = n; best = Math.max(best, run); });
+  return { cur, best, total: set.size };
+}
+
+let viewMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+let keyHandler = null;
+document.addEventListener("keydown", e => keyHandler && keyHandler(e));
+
+function renderHome() {
+  keyHandler = null;
+  const st = streaks(recordVisit());
+  const t = personIdx(today), ts = STORIES[t];
+  const y = viewMonth.getFullYear(), m = viewMonth.getMonth();
+  const first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate();
+  let cells = "";
+  for (let i = 0; i < first; i++) cells += '<div class="day empty"></div>';
+  for (let d = 1; d <= days; d++) {
+    const date = new Date(y, m, d), n = dayNum(date);
+    if (n < dayNum(START) || n > dayNum(today)) { cells += `<div class="day">${d}</div>`; continue; } // 시작 전, 미래
+    const idx = personIdx(date);
+    cells += `<div class="day open ${n === dayNum(today) ? "today" : ""}" data-idx="${idx}">${hasNote(idx) ? '<span class="dot"></span>' : ""}${d}<span class="nm">${STORIES[idx].name}</span></div>`;
+  }
+  app.innerHTML = `
+    <div class="head"><h1 class="home-title">Daily Billionaire</h1><div class="streak">Streak <b>${st.cur}</b></div></div>
+    <div class="date">${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}</div>
+    <div class="hero" data-idx="${t}">
+      <div class="label">TODAY</div>
+      <h2>${ts.name}</h2>
+      <div class="meta">${ts.year} · ${ts.age}<br>${ts.item}</div>
+      <div class="go">Read story →</div>
+    </div>
+    <div class="sec"><span>Calendar</span>
+      <span><button id="pm">‹</button>${y}.${String(m + 1).padStart(2, "0")}<button id="nm">›</button></span></div>
+    <div class="dow">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(c => `<div>${c}</div>`).join("")}</div>
+    <div class="cal">${cells}</div>
+    <div class="sec"><span>Collection</span><span>${STORIES.length}</span></div>
+    <div class="grid">${STORIES.map((s, i) => `<div class="gcard" data-idx="${i}"><div class="no">${String(i + 1).padStart(2, "0")}</div><div class="nm">${s.name}</div><div class="it">${s.item}</div></div>`).join("")}</div>
+  `;
+  app.querySelectorAll("[data-idx]").forEach(el => el.onclick = () => { location.hash = "#/s/" + el.dataset.idx; });
+  document.getElementById("pm").onclick = () => { viewMonth = new Date(y, m - 1, 1); renderHome(); };
+  document.getElementById("nm").onclick = () => { viewMonth = new Date(y, m + 1, 1); renderHome(); };
+}
+
+function renderStory(idx) {
+  const s = STORIES[idx];
+  const inner = (label, text) => `<div class="label">${label}</div><div class="text">${text}</div>`;
+  const card = (label, text) => `<div>${inner(label, text)}</div>`;
+  // 카드 순서: 표지 → 그때 → 아이디어 → 시작 → 초기 → 성장 → 지금 → 영상 → 교훈 → 내 메모
+  const slides = [
+    `<div class="cover"><div class="label">TODAY'S BILLIONAIRE</div>
+       <h1>${s.name}</h1>
+       <div class="meta">${s.year} · ${s.age}<br>${s.place}</div>
+       <div class="item">${s.item}</div></div>`,
+    card("THEN", s.when),
+    card("IDEA", s.idea),
+    ...s.start.map((t, i) => card(`START ${i + 1}/${s.start.length}`, t)),
+    ...s.early.map((t, i) => card(`FIRST TRACTION ${i + 1}/${s.early.length}`, t)),
+    card("GROWTH", s.growth),
+    card("NOW", s.now),
+    card("VIDEO", `<a href="${s.video.url}" target="_blank" rel="noopener">▶ ${s.video.title}</a>`),
+    `<div class="lesson">${inner("TAKEAWAY", s.lesson)}</div>`,
+    `<div>${inner("MY NOTE", "")}<textarea id="note" placeholder="${QUESTION}"></textarea><div class="saved" id="saved"></div></div>`
+  ];
+  app.innerHTML = `
+    <div class="topbar"><button class="back" id="back">← Home</button><button class="notebtn" id="notebtn">My Note</button></div>
+    <div class="bar"><div id="progress"></div></div>
+    <div class="track" id="track">${slides.map(h => `<div class="slide">${h}</div>`).join("")}</div>
+    <div class="nav"><button id="prev">‹</button><span id="count"></span><button id="next">›</button></div>`;
+  document.getElementById("back").onclick = () => { location.hash = "#/"; };
+  const notebtn = document.getElementById("notebtn");
+  notebtn.classList.toggle("has", hasNote(idx));
+
+  const track = document.getElementById("track");
+  const els = [...track.children];
+  const step = () => els[0].offsetWidth + 12;
+  const cur = () => Math.round(track.scrollLeft / step());
+  const go = i => track.scrollTo({ left: Math.max(0, Math.min(els.length - 1, i)) * step(), behavior: "smooth" });
+  const update = () => {
+    const i = cur();
+    document.getElementById("count").textContent = `${i + 1} / ${els.length}`;
+    document.getElementById("progress").style.width = ((i + 1) / els.length * 100) + "%";
+    document.getElementById("prev").disabled = i === 0;
+    document.getElementById("next").disabled = i === els.length - 1;
+  };
+  track.addEventListener("scroll", update);
+  document.getElementById("prev").onclick = () => go(cur() - 1);
+  document.getElementById("next").onclick = () => go(cur() + 1);
+  els.forEach(el => el.addEventListener("click", e => { // 링크·메모칸은 제외
+    if (e.target.closest("a, textarea")) return;
+    go(cur() === els.length - 1 ? 0 : cur() + 1);
+  }));
+  keyHandler = e => {
+    if (e.target.tagName === "TEXTAREA") return;
+    if (e.key === "ArrowRight") go(cur() + 1);
+    if (e.key === "ArrowLeft") go(cur() - 1);
+  };
+  notebtn.onclick = () => go(els.length - 1); // 메모 카드(맨 끝)로 바로 이동
+  update();
+
+  // 내 메모: 사람별로 브라우저에 자동 저장
+  const note = document.getElementById("note"), saved = document.getElementById("saved"), key = "note:" + s.name;
+  try { note.value = localStorage.getItem(key) || ""; } catch (e) {}
+  note.addEventListener("input", () => {
+    try { localStorage.setItem(key, note.value); saved.textContent = "Saved"; notebtn.classList.toggle("has", !!note.value); } catch (e) { saved.textContent = "저장 안 됨(브라우저 설정 확인)"; }
+  });
+}
+
+function route() {
+  const m = location.hash.match(/^#\/s\/(\d+)$/);
+  window.scrollTo(0, 0);
+  if (m && STORIES[+m[1]]) renderStory(+m[1]); else renderHome();
+}
+window.addEventListener("hashchange", route);
+route();
+
+</script>
+</body>
+</html>

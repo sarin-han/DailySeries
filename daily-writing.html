@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Write</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root {
+    --bg:#ece8dd; --paper:#fffdf6; --ink:#101012; --muted:#6c6a63; --line:#101012;
+    --acc:#2b3bff; --on-acc:#fff; --hot:#ff4a1c; --sun:#ffd23f;
+    --disp:"Space Grotesk","Pretendard Variable",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+    --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    --sh:4px 4px 0 var(--ink);
+  }
+  * { box-sizing:border-box; }
+  html { color-scheme:light; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 var(--sans); -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(rgba(16,16,18,.13) 1px, transparent 1.2px); background-size:18px 18px; }
+  main { max-width:860px; margin:0 auto; padding:36px 18px 90px; }
+  button { font:inherit; color:inherit; cursor:pointer; transition:transform .12s ease, box-shadow .12s ease, background .15s ease; }
+  button:active:not(:disabled) { transform:translate(2px,2px); box-shadow:none !important; }
+  ::selection { background:var(--sun); color:var(--ink); }
+  .hidden { display:none !important; }
+
+  /* header */
+  header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px; gap:12px; }
+  h1 { margin:0; font-family:var(--disp); font-size:clamp(34px,6vw,54px); line-height:.9; font-weight:700; letter-spacing:-.05em; text-transform:uppercase; }
+  h1 span { color:var(--acc); }
+  .sub { font-family:var(--mono); color:var(--muted); font-size:11.5px; margin-top:12px; letter-spacing:.02em; }
+  .streak { display:inline-flex; align-items:center; gap:10px; height:42px; padding:0 14px; border:2px solid var(--ink); background:var(--sun); box-shadow:var(--sh); font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.18em; line-height:1; white-space:nowrap; }
+  .streak b { font-family:var(--disp); font-size:26px; line-height:1; letter-spacing:0; font-variant-numeric:tabular-nums; }
+
+  /* hero */
+  .hero { position:relative; background:var(--acc); color:var(--on-acc); border:2px solid var(--ink); box-shadow:8px 8px 0 var(--ink); padding:24px 26px 26px; }
+  .hero .tag { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:11px; letter-spacing:.24em; font-weight:700; }
+  .hero .tag::before { content:""; width:10px; height:10px; background:var(--sun); border:2px solid var(--ink); }
+  .chip { margin-left:4px; padding:2px 10px; background:var(--paper); color:var(--ink); border:2px solid var(--ink); font-size:11px; letter-spacing:.08em; font-weight:700; text-transform:uppercase; }
+  .hero .q { font-family:"Space Grotesk","Pretendard Variable",sans-serif; font-size:clamp(20px,3vw,26px); line-height:1.45; font-weight:700; letter-spacing:-.025em; margin:18px 0 24px; word-break:keep-all; }
+  .go { background:var(--sun); color:var(--ink); border:2px solid var(--ink); padding:10px 22px; font-size:15px; font-weight:800; box-shadow:var(--sh); }
+  .go:hover:not(:disabled) { transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink); }
+  .go.ghost { background:transparent; color:var(--on-acc); border:2px solid var(--on-acc); box-shadow:none; margin-left:10px; font-weight:600; font-size:13px; padding:8px 14px; }
+  .go.ghost:hover:not(:disabled) { background:var(--paper); color:var(--ink); transform:none; box-shadow:none; }
+  .go.ghost:disabled { opacity:.45; cursor:not-allowed; }
+  .done { margin-left:14px; font-family:var(--mono); font-size:12px; color:var(--sun); font-weight:700; }
+
+  /* calendar */
+  .calhead { display:flex; align-items:center; justify-content:space-between; margin:52px 0 14px; }
+  .calhead h2 { margin:0; font-family:var(--disp); font-weight:700; font-size:30px; letter-spacing:-.04em; text-transform:uppercase; }
+  .nav { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-weight:700; letter-spacing:.1em; font-size:14px; }
+  .nav button { width:36px; height:36px; border:2px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 var(--ink); }
+  .nav button:hover { background:var(--sun); }
+  .grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .dow { text-align:center; font-family:var(--mono); color:var(--muted); font-size:10.5px; padding:6px 0 4px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+  .dow:first-child { color:var(--hot); }
+  .cell { min-height:96px; border:2px solid var(--ink); background:var(--paper); padding:7px 8px; text-align:left; display:flex; flex-direction:column; justify-content:space-between; }
+  .cell.empty { border:0; background:transparent; cursor:default; }
+  .top2 { display:flex; justify-content:space-between; align-items:center; width:100%; }
+  .bot { display:flex; flex-direction:column; gap:2px; align-items:flex-start; width:100%; }
+  .cell .n { font-family:var(--mono); font-weight:700; font-size:13px; font-variant-numeric:tabular-nums; }
+  .cat2 { font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; opacity:.75; }
+  .kw { font-size:12.5px; font-weight:700; line-height:1.25; word-break:keep-all; }
+  .chk { width:18px; height:18px; background:var(--sun); color:var(--ink); border:2px solid var(--ink); font-size:10px; font-weight:900; display:grid; place-items:center; }
+  .cell.done { background:var(--acc); color:var(--on-acc); }
+  .cell.future { opacity:.35; cursor:not-allowed; border-style:dashed; }
+  .cell.today { background:var(--sun); box-shadow:var(--sh); }
+  .cell.today.done { background:var(--acc); }
+  .cell.today .n { background:var(--ink); color:var(--paper); padding:0 6px; }
+  .cell:not(.empty):not(.future):hover { transform:translate(-2px,-2px); box-shadow:var(--sh); }
+
+  /* card */
+  .overlay { position:fixed; inset:0; background:rgba(16,16,18,.55); display:flex; align-items:center; justify-content:center; padding:14px; z-index:10; animation:fadein .15s ease; }
+  @keyframes fadein { from { opacity:0; } to { opacity:1; } }
+  @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  .sheet { width:100%; max-width:660px; max-height:94vh; background:var(--paper); border:2px solid var(--ink); display:flex; flex-direction:column; overflow:hidden; box-shadow:10px 10px 0 var(--ink); animation:rise .22s cubic-bezier(.2,.9,.3,1); }
+  .top { display:flex; align-items:center; gap:8px; padding:14px 18px 4px; }
+  .x { width:36px; height:36px; border:2px solid var(--ink); background:var(--paper); font-weight:700; }
+  .x:hover { background:var(--hot); color:#fff; }
+  .sp { flex:1; }
+  .pill { border:2px solid var(--ink); background:var(--paper); padding:5px 14px; font-family:var(--mono); font-size:11.5px; font-weight:700; }
+  .pill:hover:not(:disabled) { background:var(--sun); }
+  .pill:disabled { opacity:.35; cursor:not-allowed; }
+  .body { padding:8px 28px 8px; overflow-y:auto; }
+  .step { display:inline-block; font-family:var(--mono); font-size:11px; letter-spacing:.2em; font-weight:700; background:var(--ink); color:var(--paper); padding:2px 10px; }
+  .qbox { font-family:"Space Grotesk","Pretendard Variable",sans-serif; font-size:clamp(23px,4vw,30px); line-height:1.4; font-weight:700; letter-spacing:-.03em; margin:14px 0 20px; word-break:keep-all; }
+  textarea { width:100%; min-height:250px; padding:16px; border:2px solid var(--ink); background:#fff; color:var(--ink); font:inherit; font-size:16.5px; line-height:1.85; resize:vertical; transition:box-shadow .15s; }
+  textarea::placeholder { color:#a9a69c; }
+  textarea:focus { outline:none; box-shadow:var(--sh); border-color:var(--acc); }
+  .meta { display:flex; justify-content:space-between; gap:12px; margin-top:12px; font-family:var(--mono); font-size:11.5px; color:var(--muted); }
+  .meta .good { color:var(--acc); font-weight:700; }
+  .follow { margin-top:16px; display:flex; flex-direction:column; gap:14px; }
+  .fq { }
+  .fql { font-family:var(--mono); font-size:10px; letter-spacing:.25em; font-weight:700; color:var(--muted); margin-bottom:6px; }
+  .fqt { font-size:16.5px; line-height:1.6; font-weight:700; padding:10px 14px; background:var(--sun); border:2px solid var(--ink); box-shadow:var(--sh); word-break:keep-all; }
+  .fq textarea { min-height:110px; margin-top:10px; font-size:15.5px; }
+  .fq .err { font-size:14px; color:var(--hot); font-weight:600; }
+  .foot { display:flex; align-items:center; gap:8px; padding:14px 18px 18px; border-top:2px solid var(--ink); margin-top:12px; }
+  .btn { border:2px solid var(--ink); background:var(--paper); padding:10px 20px; font-weight:700; }
+  .btn.main { background:var(--acc); color:var(--on-acc); padding:10px 34px; font-weight:800; box-shadow:var(--sh); }
+  .btn.main:hover:not(:disabled) { transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink); }
+  .btn:disabled { opacity:.35; cursor:not-allowed; box-shadow:none; }
+
+  /* streak toast */
+  .toast { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:0; z-index:30; }
+  .toast-in { background:var(--sun); color:var(--ink); border:3px solid var(--ink); box-shadow:12px 12px 0 var(--ink); padding:24px 52px 20px; text-align:center; transform:scale(.8) rotate(-2deg); }
+  .toast .tl { display:block; font-family:var(--mono); font-size:11px; letter-spacing:.35em; font-weight:700; }
+  .toast b { display:block; font-family:var(--disp); font-size:96px; line-height:1; font-weight:700; letter-spacing:-.04em; }
+  .toast .td { display:block; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; }
+  .toast.show { animation:toastfade 2.4s ease forwards; }
+  .toast.show .toast-in { animation:toastpop 2.4s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  @keyframes toastfade { 0% { opacity:0; } 12% { opacity:1; } 65% { opacity:1; } 100% { opacity:0; } }
+  @keyframes toastpop { 0% { transform:scale(.8) rotate(-2deg); } 15% { transform:scale(1) rotate(-2deg); } 100% { transform:scale(1.04) rotate(-2deg); } }
+
+  @media (max-width:560px) {
+    main { padding:24px 14px 70px; }
+    .hero { padding:22px 20px 24px; box-shadow:5px 5px 0 var(--ink); }
+    .cell { min-height:78px; padding:5px 5px; } .kw { font-size:11px; } .cat2 { font-size:7.5px; }
+    .overlay { padding:0; } .sheet { max-height:100vh; height:100vh; max-width:none; border:0; box-shadow:none; }
+    .body { padding:6px 20px 8px; }
+  }
+  .dnav { --n-ink:#101012; --n-mut:#6c6a63; --n-acc:#2b3bff; display:flex; justify-content:flex-end; gap:4px; margin:0 auto 14px; padding:0; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; font-family:"JetBrains Mono",ui-monospace,Menlo,monospace; }
+  .dnav a { color:var(--n-mut); text-decoration:none; padding:4px 0; margin-left:14px; border-bottom:2px solid transparent; }
+  .dnav a:hover { color:var(--n-ink); }
+  .dnav a[aria-current] { color:var(--n-ink); border-bottom-color:var(--n-acc); pointer-events:none; }
+</style>
+</head>
+<body>
+<main>
+  <nav class="dnav"><a href="daily-writing.html" aria-current="page">Writing</a><a href="daily-goal.html">Goal</a><a href="daily-billionaire.html">Billionaire</a><a href="daily-spending.html">Spending</a><a href="daily-time.html">Time</a></nav>
+  <header>
+    <div>
+      <h1>Daily <span>Write</span></h1>
+      <div class="sub" id="today"></div>
+    </div>
+    <div class="streak">STREAK<b id="streak">0</b></div>
+  </header>
+
+  <section class="hero">
+    <div class="tag">TODAY<span class="chip" id="hCat"></span></div>
+    <div class="q" id="hQ"></div>
+    <button class="go" id="hGo">Start →</button><button class="go ghost" id="hChange"></button><span class="done" id="hDone"></span>
+  </section>
+
+  <div class="calhead">
+    <h2>Calendar</h2>
+    <div class="nav"><button id="prev">‹</button><span id="ym"></span><button id="nextM">›</button></div>
+  </div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="toast" id="toast" aria-live="polite"><div class="toast-in"><span class="tl">STREAK</span><b id="toastN">0</b><span class="td">days</span></div></div>
+
+<div class="overlay hidden" id="overlay">
+  <div class="sheet">
+    <div class="top">
+      <button class="x" id="close" aria-label="Close">✕</button>
+      <span class="sp"></span>
+      <button class="pill" id="swap"></button>
+    </div>
+    <div class="body">
+      <div class="step" id="sCat"></div>
+      <div class="qbox" id="sQ"></div>
+      <textarea id="free" placeholder="Just start writing…"></textarea>
+      <div class="meta"><span id="count"></span><span>Don't try to write well. Just write.</span></div>
+      <div class="follow" id="follow"></div>
+    </div>
+    <div class="foot">
+      <button class="btn" id="aiFb">Deeper</button>
+      <span class="sp"></span>
+      <button class="btn main" id="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+const QUESTIONS = [
+  { c:"Fun", k:"25시간", q:"하루가 25시간이 된다면, 늘어난 1시간을 어디에 쓰고 싶은가?" },
+  { c:"Fun", k:"쓸 수 있는 돈", q:"일주일 동안 돈 걱정 없이 쓸 수 있다면 무엇을 하고 싶은가?" },
+  { c:"Fun", k:"초능력", q:"내일 아침 한 가지 능력이 생긴다면 무엇을 고르고, 가장 먼저 어디에 쓸까?" },
+  { c:"Fun", k:"과거의 나", q:"3년 전의 나에게 딱 한 가지 조언을 할 수 있다면 무엇일까?" },
+  { c:"Fun", k:"한 가지 음식", q:"평생 한 가지 음식만 먹어야 한다면 무엇을 고를까?" },
+  { c:"Fun", k:"내 하루 영화", q:"내 하루를 영화로 만든다면 어떤 장르이고 제목은 무엇일까?" },
+  { c:"Fun", k:"폰 없는 하루", q:"휴대폰 없이 하루를 보낸다면 가장 힘든 순간은 언제일까?" },
+  { c:"Fun", k:"무인도", q:"무인도에 물건을 세 가지만 가져갈 수 있다면 무엇일까?" },
+  { c:"Fun", k:"다른 사람의 삶", q:"하루 동안 다른 사람의 삶을 살 수 있다면 누구로 살아 보고 싶은가?" },
+  { c:"Fun", k:"어디든 간다면", q:"지금 당장 어디든 갈 수 있다면 어디로 가고 싶은가?" },
+  { c:"Daily", k:"완벽한 하루", q:"나에게 완벽한 하루는 어떤 모습일까?" },
+  { c:"Daily", k:"아침 습관", q:"아침에 일어나서 가장 먼저 하는 일은 하루에 어떤 영향을 줄까?" },
+  { c:"Daily", k:"시간 쓰는 곳", q:"요즘 내가 가장 많은 시간을 쓰는 것은 무엇이고, 그만한 가치가 있을까?" },
+  { c:"Daily", k:"편한 공간", q:"내가 가장 편안함을 느끼는 공간은 어디이고 왜일까?" },
+  { c:"Daily", k:"습관", q:"내 하루에서 없애고 싶은 습관 하나와 만들고 싶은 습관 하나는 무엇일까?" },
+  { c:"Self", k:"나다움", q:"나는 어떤 때 가장 나답다고 느낄까?" },
+  { c:"Self", k:"숨은 장점", q:"남들은 잘 모르지만 내가 잘하는 것은 무엇일까?" },
+  { c:"Relationship", k:"좋은 친구", q:"좋은 친구란 어떤 사람일까?" },
+  { c:"Money", k:"용돈 두 배", q:"한 달 용돈이나 수입이 두 배가 된다면 무엇이 달라질까?" },
+  { c:"Work & Study", k:"일의 선택", q:"하고 싶은 일을 찾는 것과 잘하는 일을 찾는 것 중 무엇이 먼저일까?" },
+  { c:"Daily", k:"피곤함", q:"요즘 나를 가장 피곤하게 하는 것은 무엇일까?" },
+  { c:"Self", k:"계획과 즉흥", q:"나는 계획형과 즉흥형 중 어느 쪽에 가깝고, 어느 쪽이 나에게 더 맞을까?" },
+  { c:"Relationship", k:"가까운 사이", q:"가까운 사이일수록 예의가 더 필요할까?" },
+  { c:"Work & Study", k:"프로젝트", q:"대학생은 학점보다 프로젝트 경험을 우선해야 할까?" },
+  { c:"Money", k:"경험 소비", q:"소비는 경험에 쓰는 게 물건에 쓰는 것보다 나을까?" },
+  { c:"Self", k:"혼자의 시간", q:"혼자 있는 시간은 나에게 왜 필요할까?" },
+  { c:"Daily", k:"미루는 일", q:"요즘 내가 미루고 있는 일은 무엇이고, 왜 미루고 있을까?" },
+  { c:"Self", k:"실패", q:"실패는 정말 좋은 경험일까?" },
+  { c:"Relationship", k:"먼저 사과", q:"갈등이 생겼을 때 먼저 사과해야 할까?" },
+  { c:"Work & Study", k:"공부법", q:"나에게 맞는 공부 방법은 어떻게 찾을 수 있을까?" },
+  { c:"Self", k:"후회", q:"후회하지 않는 선택이 가능할까?" },
+  { c:"Money", k:"충분한 돈", q:"돈은 얼마나 있으면 충분할까?" },
+  { c:"Work & Study", k:"AI와 기본기", q:"AI 도구가 있어도 기본기를 직접 익힐 필요가 있을까?" },
+  { c:"Relationship", k:"거절", q:"거절을 잘하는 것도 능력일까?" },
+  { c:"Self", k:"남의 시선", q:"남의 시선은 얼마나 신경 써야 할까?" },
+  { c:"Daily", k:"좋은 휴식", q:"나에게 가장 좋은 휴식은 무엇일까?" },
+  { c:"Work & Study", k:"속도 vs 완벽", q:"일을 빨리 끝내는 것과 완벽하게 하는 것 중 무엇이 더 중요할까?" },
+  { c:"Relationship", k:"모두에게 좋은 사람", q:"모든 사람에게 좋은 사람일 필요가 있을까?" },
+  { c:"Money", k:"가성비", q:"싸게 사는 것과 좋은 것을 오래 쓰는 것 중 무엇이 더 합리적일까?" },
+  { c:"Values", k:"행복", q:"행복은 목표일까, 결과일까?" },
+  { c:"Relationship", k:"비밀", q:"연인이나 가족에게도 비밀은 있어도 될까?" },
+  { c:"Self", k:"변하는 것", q:"나이가 들수록 달라지는 것과, 달라지지 않았으면 하는 것은 무엇일까?" },
+  { c:"Work & Study", k:"좋은 팀원", q:"좋은 팀원이란 어떤 사람일까?" },
+  { c:"Work & Study", k:"의견 표현", q:"직장에서 의견이 다를 때 바로 말해야 할까, 참아야 할까?" },
+  { c:"Money", k:"의미 있는 일", q:"월급이 적어도 의미 있는 일을 해야 할까?" },
+  { c:"Values", k:"성공", q:"나에게 성공이란 무엇일까?" },
+  { c:"Values", k:"정직", q:"정직하면 손해를 볼까?" },
+  { c:"Relationship", k:"나이와 존중", q:"나이가 많다는 이유로 존중받아야 할까?" },
+  { c:"Values", k:"용서", q:"용서는 꼭 해야 하는 것일까?" },
+  { c:"Values", k:"운", q:"운은 성공에 얼마나 큰 영향을 줄까?" },
+  { c:"Values", k:"나의 원칙", q:"내가 반드시 지키고 싶은 원칙은 무엇일까?" },
+  { c:"Values", k:"어른", q:"어른이 된다는 것은 무엇일까?" },
+  { c:"Values", k:"자유와 책임", q:"자유와 책임 중 어느 쪽이 더 무거울까?" },
+  { c:"Values", k:"말과 행동", q:"말과 행동이 다를 때 사람을 무엇으로 판단해야 할까?" },
+  { c:"Values", k:"용기", q:"용기는 타고나는 것일까, 만들어지는 것일까?" },
+  { c:"Values", k:"버킷리스트", q:"죽기 전에 꼭 해 보고 싶은 일은 무엇일까?" },
+  { c:"Values", k:"노력과 성공", q:"열심히 하면 누구나 성공할 수 있을까?" },
+  { c:"Values", k:"돕는 것", q:"누군가를 돕는 것은 의무일까, 선택일까?" },
+  { c:"Values", k:"10년 뒤의 나", q:"10년 뒤의 나에게 지금의 나는 무슨 말을 해 주고 싶을까?" },
+  { c:"Values", k:"나의 세상", q:"내가 만든 세상이 있다면 어떤 규칙이 가장 중요할까?" }
+];
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,"0");
+const keyOf = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
+const now = new Date();
+const TODAY = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
+const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const parseKey = k => { const [y,m,d] = k.split("-").map(Number); return { y, m:m-1, d }; };
+const load = (key, def) => { try { return JSON.parse(localStorage.getItem(key) || def); } catch(e) { return JSON.parse(def); } };
+const store = (key, v) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch(e) {} };
+
+let log = load("debateLog2", "{}");      // { date: { q, k, c, free } }
+let locks = load("debateLock", "{}");     // { date: question }
+let rcount = load("debateRefresh", "{}"); // { date: n }
+let drafts = load("debateDraft", "{}");   // { date: { q, free } }
+const MAX_REFRESH = 3;
+
+// 한 번만: 새 주제 목록으로 바꾸면서 오늘 기록을 비우고 다시 시작
+try {
+  if (!localStorage.getItem("debateReset60")) {
+    delete log[TODAY]; delete drafts[TODAY]; delete locks[TODAY]; delete rcount[TODAY];
+    store("debateLog2", log); store("debateDraft", drafts); store("debateLock", locks); store("debateRefresh", rcount);
+    localStorage.setItem("debateReset60", "1");
+  }
+} catch(e) {}
+
+function startDay() {
+  let v = null;
+  try { v = localStorage.getItem("debateStartDay3"); } catch(e) {}
+  if (v == null) {
+    v = String(Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())/86400000));
+    try { localStorage.setItem("debateStartDay3", v); } catch(e) {}
+  }
+  return Number(v);
+}
+function questionFor(k) {
+  const fixed = QUESTIONS.find(q => q.q === (log[k] && log[k].q || locks[k]));
+  if (fixed) return fixed;
+  if (log[k]) return { q:log[k].q, k:log[k].k || "", c:log[k].c || "" };
+  const { y, m, d } = parseKey(k);
+  const day = Math.floor(Date.UTC(y,m,d)/86400000);
+  return QUESTIONS[(((day - startDay()) % QUESTIONS.length) + QUESTIONS.length) % QUESTIONS.length];
+}
+const refreshLeft = k => MAX_REFRESH - (rcount[k] || 0);
+function refreshTopic(k) {
+  if (refreshLeft(k) <= 0 || log[k]) return false;
+  const curQ = questionFor(k).q;
+  const pool = QUESTIONS.filter(q => q.q !== curQ);
+  locks[k] = pool[Math.floor(Math.random()*pool.length)].q;
+  rcount[k] = (rcount[k] || 0) + 1;
+  store("debateLock", locks); store("debateRefresh", rcount);
+  return true;
+}
+
+/* ---------- 문장 수 ---------- */
+function countSentences(t) {
+  return (t.match(/[^.!?。\n]+[.!?。]*/g) || []).filter(x => x.trim().length > 1).length;
+}
+
+/* ---------- HOME ---------- */
+function calcStreak() {
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const k = () => keyOf(d.getFullYear(), d.getMonth(), d.getDate());
+  if (!log[k()]) d.setDate(d.getDate()-1);
+  let n = 0;
+  while (log[k()]) { n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+let viewY = now.getFullYear(), viewM = now.getMonth();
+
+function renderHome() {
+  const q = questionFor(TODAY), rec = log[TODAY];
+  $("hCat").textContent = q.c;
+  $("hQ").textContent = q.q;
+  $("hGo").textContent = rec ? "Review →" : drafts[TODAY] ? "Continue →" : "Start →";
+  const n = refreshLeft(TODAY);
+  $("hChange").textContent = `↻ Change topic (${n} left)`;
+  $("hChange").disabled = n <= 0;
+  $("hChange").classList.toggle("hidden", !!rec);
+  $("hDone").textContent = rec ? `✔ Done · ${countSentences(rec.free || "")} sentences` : "";
+  $("streak").textContent = calcStreak();
+  renderCal();
+}
+function renderCal() {
+  $("ym").textContent = `${viewY}.${pad(viewM+1)}`;
+  const first = new Date(viewY, viewM, 1).getDay();
+  const days = new Date(viewY, viewM+1, 0).getDate();
+  let h = DOW.map(d => `<div class="dow">${d}</div>`).join("");
+  for (let i = 0; i < first; i++) h += `<div class="cell empty"></div>`;
+  for (let d = 1; d <= days; d++) {
+    const k = keyOf(viewY, viewM, d), rec = log[k], future = k > TODAY;
+    const cls = ["cell", future && "future", k === TODAY && "today", rec && "done"].filter(Boolean).join(" ");
+    const qq = questionFor(k);
+    const info = rec ? `<span class="cat2">${rec.c || qq.c}</span><span class="kw">${rec.k || qq.k}</span>` : "";
+    const chk = rec ? `<span class="chk">✔</span>` : "";
+    h += `<button class="${cls}" data-k="${k}" ${future ? "disabled" : ""}><span class="top2"><span class="n">${d}</span>${chk}</span><span class="bot">${info}</span></button>`;
+  }
+  $("grid").innerHTML = h;
+  $("grid").querySelectorAll("button.cell:not(.empty)").forEach(b => b.onclick = () => openCard(b.dataset.k));
+}
+$("prev").onclick = () => { if (--viewM < 0) { viewM = 11; viewY--; } renderCal(); };
+$("nextM").onclick = () => { if (++viewM > 11) { viewM = 0; viewY++; } renderCal(); };
+$("hGo").onclick = () => openCard(TODAY);
+$("hChange").onclick = () => { if (refreshTopic(TODAY)) { delete drafts[TODAY]; store("debateDraft", drafts); renderHome(); } };
+
+/* ---------- 카드 ---------- */
+let selKey = TODAY, cur = null, follow = [];
+const MAX_FOLLOW = 2;
+function openCard(k) {
+  selKey = k; cur = questionFor(k);
+  if (!locks[k] && !log[k]) { locks[k] = cur.q; store("debateLock", locks); }
+  if (drafts[k] && drafts[k].q !== cur.q) { delete drafts[k]; store("debateDraft", drafts); }
+  const rec = drafts[k] || log[k];
+  $("free").value = rec ? (rec.free || "") : "";
+  follow = rec && Array.isArray(rec.follow) ? rec.follow.map(f => ({ q:f.q, a:f.a || "" })) : [];
+  $("sCat").textContent = cur.c.toUpperCase();
+  $("sQ").textContent = cur.q;
+  renderFollow();
+  paintSwap(); update();
+  $("overlay").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => $("free").focus({ preventScroll:true }), 50);
+}
+function closeCard() {
+  $("overlay").classList.add("hidden");
+  document.body.style.overflow = "";
+  renderHome();
+}
+function paintSwap() {
+  const n = refreshLeft(selKey);
+  $("swap").textContent = `↻ Change topic (${n} left)`;
+  $("swap").disabled = n <= 0 || !!log[selKey];
+}
+function update() {
+  const t = $("free").value, n = countSentences(t);
+  $("count").innerHTML = n >= 5 ? `<span class="good">${n} sentences ✓</span>` : `${n} sentences · aim for 5–10`;
+  $("save").disabled = t.trim().length === 0;
+}
+function saveDraft() {
+  if (!selKey || $("overlay").classList.contains("hidden")) return;
+  drafts[selKey] = { q:cur.q, free:$("free").value, follow };
+  store("debateDraft", drafts);
+}
+$("free").addEventListener("input", () => { update(); saveDraft(); });
+$("swap").onclick = () => {
+  if (!refreshTopic(selKey)) return;
+  delete drafts[selKey]; store("debateDraft", drafts);
+  cur = questionFor(selKey);
+  follow = []; renderFollow();
+  $("free").value = ""; $("sCat").textContent = cur.c.toUpperCase(); $("sQ").textContent = cur.q;
+  paintSwap(); update(); $("free").focus();
+};
+/* ---------- AI feedback (optional, OpenAI) ---------- */
+const MODEL = "gpt-4o-mini";
+async function askAI(system, user) {
+  const key = window.OPENAI_API_KEY || "";
+  if (!key) throw new Error("No API key. Open config.js in this folder, paste your OpenAI key between the quotes, save, and reload.");
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + key },
+    body: JSON.stringify({ model:MODEL, temperature:0.5, messages:[{ role:"system", content:system }, { role:"user", content:user }] })
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j.error && j.error.message) || `Request failed (${r.status})`);
+  return j.choices[0].message.content.trim();
+}
+const FB_PROMPT = "당신은 생각을 깊게 만드는 한국어 질문 코치입니다. 사용자가 주제에 대해 쓴 글을 읽고, 글에서 가장 약한 부분을 파고드는 후속 질문을 딱 하나만 하세요. 이유나 근거가 빠졌으면 '왜'를, 추상적이면 구체적인 예를, 한쪽 입장만 있으면 반대 입장을, 이미 충분히 구체적이면 한 단계 더 깊은 의미를 물어보세요. 칭찬, 평가, 문장 수정은 하지 마세요. 이전 후속 질문이 있다면 겹치지 않게 하세요. 질문 한 문장만, 존댓말 아닌 '~해?' 같은 친근한 말투로, 따옴표나 번호 없이 답하세요.";
+function renderFollow() {
+  const box = $("follow");
+  box.textContent = "";
+  follow.forEach((f, i) => {
+    const d = document.createElement("div"); d.className = "fq";
+    const l = document.createElement("div"); l.className = "fql"; l.textContent = `FOLLOW-UP ${i + 1}`;
+    const t = document.createElement("div"); t.className = "fqt"; t.textContent = f.q;
+    const ta = document.createElement("textarea"); ta.value = f.a; ta.placeholder = "여기에 이어서 답해 보세요.";
+    ta.addEventListener("input", () => { f.a = ta.value; saveDraft(); });
+    d.append(l, t, ta); box.append(d);
+  });
+  const btn = $("aiFb");
+  btn.disabled = follow.length >= MAX_FOLLOW;
+  btn.textContent = "Deeper";
+}
+$("aiFb").onclick = async () => {
+  const text = $("free").value.trim();
+  const btn = $("aiFb"), box = $("follow");
+  const showErr = msg => { const e = document.createElement("div"); e.className = "fq err"; e.textContent = msg; box.append(e); };
+  renderFollow();
+  if (!text) { showErr("먼저 몇 문장 써 본 뒤에 물어봐 주세요."); return; }
+  btn.disabled = true; btn.textContent = "Thinking…";
+  const prev = follow.map((f, i) => `후속 질문 ${i + 1}: ${f.q}\n내 답: ${f.a || "(아직 답 안 함)"}`).join("\n\n");
+  try {
+    const q = (await askAI(FB_PROMPT, `주제: ${cur.q}\n\n[내 글]\n${text}` + (prev ? `\n\n[이전 후속 질문]\n${prev}` : ""))).replace(/^["'“”\s]+|["'“”\s]+$/g, "");
+    follow.push({ q, a:"" }); saveDraft(); renderFollow();
+    const tas = box.querySelectorAll("textarea"); if (tas.length) tas[tas.length - 1].focus({ preventScroll:true });
+    box.lastElementChild.scrollIntoView({ behavior:"smooth", block:"nearest" });
+  } catch(e) { renderFollow(); showErr("⚠ " + e.message); }
+};
+function showStreak(n) {
+  const t = $("toast");
+  $("toastN").textContent = n;
+  t.classList.remove("show"); void t.offsetWidth;
+  t.classList.add("show");
+}
+$("save").onclick = () => {
+  const text = $("free").value.trim();
+  if (!text) return;
+  const firstTime = !log[selKey];
+  log[selKey] = { q:cur.q, k:cur.k, c:cur.c, free:text, follow:follow.filter(f => f.q) };
+  store("debateLog2", log);
+  delete drafts[selKey]; store("debateDraft", drafts);
+  closeCard();
+  if (firstTime) showStreak(calcStreak());
+};
+$("close").onclick = () => { saveDraft(); closeCard(); };
+document.addEventListener("keydown", e => {
+  if (!$("overlay").classList.contains("hidden") && e.key === "Escape") { saveDraft(); closeCard(); }
+});
+
+$("today").textContent = `${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()} · Write a few sentences. Don't aim for perfect.`;
+renderHome();
+</script>
+</body>
+</html>

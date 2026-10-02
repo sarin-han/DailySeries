@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f5f6f8; --surface:#ffffff; --subtle:#f9fafb; --line:#e4e7ec; --line-2:#eef0f3;
+    --ink:#101828; --ink-2:#475467; --muted:#98a2b3;
+    --accent:#2f5bea; --accent-ink:#ffffff; --accent-soft:#eaf0ff; --accent-line:#c9d7ff;
+    --zone:#e07b00; --zone-soft:#fff1de;
+    --relax:#0f9aa0; --relax-soft:#e1f6f6;
+    --nice:#7c3aed; --nice-soft:#f1eaff; --nice-ink:#7c3aed;
+    --p1:#0e9bd8; --p2:#9b6bdf; --p3:#e0527a;
+    --good:#12805c; --good-soft:#e6f6ef; --warn:#b54708; --warn-soft:#fff3e0; --next:#5b3fd1; --next-soft:#efeaff;
+    --h1:#e8eefe; --h2:#c4d4fb; --h3:#8aa9f5; --h4:#4f78ec;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+    --font:"Inter","Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0d1017; --surface:#151922; --subtle:#1a1f2a; --line:#262c39; --line-2:#1f2430;
+      --ink:#eef1f6; --ink-2:#aab3c2; --muted:#6b7587;
+      --accent:#6c8cff; --accent-ink:#0d1017; --accent-soft:#1c2540; --accent-line:#2c3a66;
+      --zone:#f2b05a; --zone-soft:#2b2214;
+      --relax:#4fd1c5; --relax-soft:#10282a;
+      --nice:#a78bfa; --nice-soft:#1f1a35; --nice-ink:#a78bfa;
+      --p1:#5cc0f2; --p2:#b794f6; --p3:#f58aa6;
+      --good:#4cc79a; --good-soft:#12261f; --warn:#f2a65a; --warn-soft:#2a2013; --next:#a994ff; --next-soft:#201b3a;
+      --h1:#1c2540; --h2:#2a3b72; --h3:#3d58b5; --h4:#6c8cff;
+      --shadow:none;
+    }
+    html { color-scheme:dark; }
+  }
+  * { box-sizing:border-box; }
+  html { color-scheme:light dark; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 var(--font); -webkit-font-smoothing:antialiased; }
+  button, input, textarea { font:inherit; color:inherit; }
+  button { cursor:pointer; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .num { font-variant-numeric:tabular-nums; }
+
+  /* header */
+  header.bar { background:var(--surface); border-bottom:1px solid var(--line); }
+  .bar-in { max-width:1120px; margin:0 auto; padding:0 20px; height:56px; display:flex; align-items:center; gap:24px; }
+  .brand { font-weight:700; font-size:15px; letter-spacing:-.01em; display:flex; align-items:center; gap:8px; }
+  .brand i { width:8px; height:8px; border-radius:2px; background:var(--accent); display:block; }
+  .tagline { margin-left:-2px; font-size:13px; font-weight:500; color:var(--ink-2); opacity:.5; letter-spacing:.01em; white-space:nowrap; }
+  .dnav { display:flex; gap:2px; margin-left:auto; overflow-x:auto; }
+  .dnav a { color:var(--ink-2); text-decoration:none; font-size:13px; font-weight:500; padding:6px 12px; border-radius:6px; white-space:nowrap; }
+  .dnav a:hover { background:var(--subtle); color:var(--ink); }
+  .dnav a[aria-current] { background:var(--accent-soft); color:var(--accent); }
+
+  main { max-width:1120px; margin:0 auto; padding:24px 20px 80px; display:grid; grid-template-columns:300px 1fr; gap:20px; align-items:start; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); }
+  .side { display:grid; gap:16px; position:sticky; top:16px; }
+  .eyebrow { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+
+  /* stats */
+  .kpis { display:grid; grid-template-columns:repeat(2,1fr); }
+  .kpi { padding:14px 16px 12px; border-right:1px solid var(--line-2); border-bottom:1px solid var(--line-2); }
+  .kpi:first-child, .kpi:nth-child(odd) { border-right:0; }
+  .kpi:first-child { grid-column:1 / -1; }
+  .kpi:nth-child(n+4) { border-bottom:0; }
+  .kpi b { display:block; font-size:24px; font-weight:600; letter-spacing:-.02em; line-height:1.15; margin-top:4px; }
+  .kpi small { font-size:12px; color:var(--ink-2); font-weight:400; margin-left:2px; }
+  .kpi.zn b { color:var(--zone); }
+  .kpi.sv b { color:var(--good); }
+  .kpi.rl b { color:var(--relax); }
+  .kpi.gd b { color:var(--nice-ink); }
+
+  /* calendar */
+  .cal { padding:14px 14px 16px; }
+  .cal-h { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .cal-h b { font-size:14px; font-weight:600; }
+  .ib { width:28px; height:28px; border-radius:6px; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); display:grid; place-items:center; font-size:14px; line-height:1; }
+  .ib:hover:not(:disabled) { background:var(--subtle); color:var(--ink); }
+  .ib:disabled { opacity:.4; cursor:not-allowed; }
+  .cal-nav { display:flex; gap:4px; }
+  .grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .dow { text-align:center; font-size:11px; color:var(--muted); padding-bottom:4px; font-weight:500; }
+  .cell { position:relative; aspect-ratio:1; border:1px solid transparent; border-radius:6px; background:transparent; font-size:12px; color:var(--ink-2); display:grid; place-items:center; padding:0; }
+  .cell.empty { pointer-events:none; }
+  .cell:not(.empty):not(:disabled):hover { border-color:var(--accent-line); }
+  .cell.l1 { background:var(--h1); color:var(--ink); } .cell.l2 { background:var(--h2); color:var(--ink); }
+  .cell.l3 { background:var(--h3); color:#fff; } .cell.l4 { background:var(--h4); color:#fff; }
+  .cell.today { font-weight:700; box-shadow:inset 0 0 0 1px var(--ink-2); }
+  .cell.sel { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-line); }
+  .cell.future { opacity:.35; cursor:not-allowed; }
+  .cell .fd { position:absolute; right:3px; top:3px; width:5px; height:5px; border-radius:50%; background:var(--warn); }
+  .legend { display:flex; align-items:center; gap:6px; margin-top:12px; font-size:11px; color:var(--muted); }
+  .legend i { width:10px; height:10px; border-radius:3px; display:block; }
+  .legend .sp { flex:1; }
+  .cal-sum { margin-top:12px; padding-top:12px; border-top:1px solid var(--line-2); display:grid; grid-template-columns:1fr auto; gap:4px 12px; font-size:13px; color:var(--ink-2); }
+  .cal-sum b { color:var(--ink); font-weight:600; text-align:right; }
+
+  /* day panel */
+  .day { padding:0; overflow:hidden; }
+  .day-h { display:flex; align-items:center; gap:12px; padding:18px 22px 14px; flex-wrap:wrap; }
+  .day-h h1 { margin:0; font-size:20px; font-weight:600; letter-spacing:-.02em; }
+  .tag { font-size:12px; font-weight:500; color:var(--accent); background:var(--accent-soft); border-radius:99px; padding:1px 10px; }
+  .day-h .sp { flex:1; }
+  .day-sub { flex:0 0 100%; margin-top:-8px; font-size:12.5px; color:var(--muted); opacity:.85; }
+  .pager { display:flex; gap:4px; }
+  .today-btn { height:28px; padding:0 12px; border-radius:6px; border:1px solid var(--line); background:var(--surface); font-size:13px; font-weight:500; color:var(--ink-2); }
+  .today-btn:hover:not(:disabled) { background:var(--subtle); color:var(--ink); }
+  .today-btn:disabled { opacity:.4; cursor:default; }
+
+  .daybar { padding:0 22px 16px; }
+  .daybar-h { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--ink-2); margin-bottom:6px; }
+  .daybar-h b { color:var(--ink); font-weight:600; }
+  .bar48 { display:grid; grid-template-columns:repeat(48,1fr); gap:1px; height:12px; }
+  .bar48 i { background:var(--line-2); display:block; }
+  .bar48 i:nth-child(odd) { border-radius:2px 0 0 2px; }
+  .bar48 i:nth-child(even) { border-radius:0 2px 2px 0; }
+  .bar48 i.on { background:var(--accent); }
+  .bar48 i.zone { background:var(--zone); }
+  .bar48 i.save { background:var(--good); }
+  .bar48 i.relax { background:var(--relax); }
+  .bar48 i.good { background:var(--nice); }
+  .bar48 i.now { box-shadow:0 0 0 1.5px var(--ink-2); position:relative; z-index:1; }
+  .bar-ax { display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); margin-top:4px; }
+  .keys { display:flex; gap:14px; margin-top:8px; font-size:11.5px; color:var(--ink-2); flex-wrap:wrap; }
+  .keys i { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+
+  .sec-h { display:flex; align-items:center; gap:12px; padding:12px 22px; border-top:1px solid var(--line); background:var(--subtle); }
+  .sec-h h2 { margin:0; font-size:13px; font-weight:600; }
+  .sec-h .sp { flex:1; }
+  .sec-h .hint { font-size:12px; color:var(--muted); }
+  .hint30 { border:1px solid var(--line); background:var(--surface); color:var(--ink-2); border-radius:6px; padding:1px 8px; font-size:11.5px; font-weight:500; }
+  .hint30:hover { background:var(--subtle); color:var(--ink); }
+
+  .tlist { display:block; }
+  .pdiv { display:flex; align-items:center; gap:10px; padding:12px 22px 6px; font-size:11.5px; font-weight:600; letter-spacing:.04em; color:var(--pc); border-top:1px solid var(--line-2); }
+  .pdiv::after { content:""; flex:1; border-top:2px dashed var(--pc); opacity:.55; }
+  .pdiv:first-child { border-top:0; }
+  .pdiv small { font-weight:500; font-size:11px; color:var(--muted); letter-spacing:0; order:3; }
+  .pdiv + .trow { border-top:0; }
+  .trow { display:grid; grid-template-columns:84px 1fr auto; align-items:center; border-top:1px solid var(--line-2); min-height:42px; position:relative; }
+  .trow:first-child { border-top:0; }
+  .trow::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:transparent; }
+  .trow.filled::before { background:var(--accent); }
+  .trow .tm { padding:0 0 0 22px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; font-weight:500; }
+  .trow.full .tm { color:var(--ink-2); }
+  .trow.now { background:var(--accent-soft); }
+  .trow.now .tm { color:var(--accent); font-weight:600; }
+  .trow input { width:100%; border:0; background:transparent; padding:11px 12px 11px 4px; font-size:14.5px; outline:none; min-width:0; }
+  .trow input::placeholder { color:var(--muted); opacity:.7; }
+  .trow:focus-within { background:var(--subtle); }
+  .trow.now:focus-within { background:var(--accent-soft); }
+  .trow input:focus-visible { outline:none; }
+  .trow.zone::before { background:var(--zone); }
+  .trow.zone:not(.now):not(:focus-within) { background:var(--zone-soft); }
+  .trow.zone .tm { color:var(--zone); font-weight:600; }
+  .trow.save::before { background:var(--good); }
+  .trow.save:not(.now):not(:focus-within) { background:var(--good-soft); }
+  .trow.save .tm { color:var(--good); font-weight:600; }
+  .trow.relax::before { background:var(--relax); }
+  .trow.relax:not(.now):not(:focus-within) { background:var(--relax-soft); }
+  .trow.relax .tm { color:var(--relax); font-weight:600; }
+  .trow.good::before { background:var(--nice); }
+  .trow.good:not(.now):not(:focus-within) { background:var(--nice-soft); }
+  .trow.good .tm { color:var(--nice-ink); font-weight:600; }
+  .tmb { border:0; background:transparent; text-align:left; cursor:pointer; font-family:inherit; }
+  .tmb::after { content:"▸"; margin-left:5px; font-size:9px; color:var(--muted); display:inline-block; transition:transform .15s; }
+  .tmb.open::after { transform:rotate(90deg); }
+  .tmb:hover { color:var(--accent); }
+  .trow.half:not(.zone):not(.save):not(.relax):not(.good):not(.now) .tm { opacity:.6; }
+  .rtools { display:flex; align-items:center; gap:6px; padding-right:16px; }
+  .mk { border:1px solid var(--line); background:var(--surface); color:var(--muted); border-radius:6px; padding:1px 9px; font-size:11.5px; font-weight:500; }
+  .trow:not(:hover):not(:focus-within) .mk:not(.on) { opacity:.5; }
+  .mk.zone:hover { border-color:var(--zone); color:var(--zone); }
+  .mk.save:hover { border-color:var(--good); color:var(--good); }
+  .mk.zone.on { background:var(--zone); border-color:var(--zone); color:var(--surface); font-weight:600; }
+  .mk.save.on { background:var(--good); border-color:var(--good); color:var(--surface); font-weight:600; }
+  .mk.relax:hover { border-color:var(--relax); color:var(--relax); }
+  .mk.good:hover { border-color:var(--nice); color:var(--nice-ink); }
+  .mk.good.on { background:var(--nice); border-color:var(--nice); color:var(--surface); font-weight:600; }
+  .mk.relax.on { background:var(--relax); border-color:var(--relax); color:var(--surface); font-weight:600; }
+
+  /* review */
+  .review { display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-top:1px solid var(--line); }
+  .fb { padding:16px 22px 18px; border-right:1px solid var(--line-2); }
+  .fb:last-child { border-right:0; }
+  .fb label { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; margin-bottom:8px; }
+  .fb label i { width:8px; height:8px; border-radius:2px; display:block; }
+  .fb.g label i { background:var(--good); } .fb.b label i { background:var(--warn); } .fb.n label i { background:var(--next); }
+  .fb textarea { display:block; width:100%; min-height:96px; resize:none; overflow:hidden; border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:9px 11px; font-size:14px; line-height:1.55; }
+  .fb textarea::placeholder { color:var(--muted); }
+  .fb textarea:focus { border-color:var(--accent); outline:none; box-shadow:0 0 0 3px var(--accent-soft); }
+  .fb.g textarea:not(:placeholder-shown) { background:var(--good-soft); border-color:transparent; }
+  .fb.b textarea:not(:placeholder-shown) { background:var(--warn-soft); border-color:transparent; }
+  .fb.n textarea:not(:placeholder-shown) { background:var(--next-soft); border-color:transparent; }
+
+  /* toast */
+  .toast { position:fixed; left:50%; bottom:28px; transform:translate(-50%,16px); background:var(--ink); color:var(--bg); border-radius:99px; padding:8px 18px; font-size:13px; font-weight:500; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:20; box-shadow:0 8px 24px rgba(16,24,40,.25); }
+  .toast.show { opacity:1; transform:translate(-50%,0); }
+  .toast b { font-weight:700; }
+
+  @media (max-width:900px) {
+    main { grid-template-columns:1fr; padding:16px 12px 70px; }
+    .side { position:static; order:2; }
+    .day { order:1; }
+    .review { grid-template-columns:1fr; }
+    .fb { border-right:0; border-bottom:1px solid var(--line-2); }
+    .fb:last-child { border-bottom:0; }
+    .bar-in { padding:0 12px; gap:12px; }
+    .day-h, .daybar, .sec-h, .pdiv { padding-left:16px; padding-right:16px; }
+    .trow { grid-template-columns:70px 1fr auto; }
+    .trow .tm { padding-left:16px; }
+    .rtools { padding-right:10px; gap:4px; }
+    .mk { padding:1px 5px; font-size:11px; }
+    .fb { padding:14px 16px 16px; }
+  }
+  @media (max-width:520px) { .tagline { display:none; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand"><i></i>Daily Time</div>
+    <span class="tagline">Own your hours</span>
+    <nav class="dnav"><a href="daily-writing.html">Writing</a><a href="daily-goal.html">Goal</a><a href="daily-billionaire.html">Billionaire</a><a href="daily-spending.html">Spending</a><a href="daily-time.html" aria-current="page">Time</a></nav>
+  </div>
+</header>
+
+<main>
+  <section class="day card" aria-label="하루 기록">
+    <div class="day-h">
+      <h1 id="pdate"></h1><span class="tag" id="prel"></span>
+      <span class="sp"></span>
+      <button class="today-btn" id="toToday" type="button">오늘</button>
+      <div class="pager">
+        <button class="ib" id="dprev" type="button" aria-label="이전 날">‹</button>
+        <button class="ib" id="dnext" type="button" aria-label="다음 날">›</button>
+      </div>
+      <div class="day-sub">It just takes 2 mins</div>
+    </div>
+
+    <div class="daybar">
+      <div class="daybar-h"><span>하루 24시간</span><span id="daySum"></span></div>
+      <div class="bar48" id="bar48"></div>
+      <div class="bar-ax"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+      <div class="keys"><span><i style="background:var(--accent)"></i>기록</span><span><i style="background:var(--nice)"></i>Well</span><span><i style="background:var(--good)"></i>Save</span><span><i style="background:var(--relax)"></i>Relax</span><span><i style="background:var(--zone)"></i>Zone</span></div>
+    </div>
+
+    <div class="sec-h">
+      <h2>시간표</h2><span class="sp"></span>
+      <span class="hint">시간을 누르면 30분 칸이 열려요 · Well 잘 쓴 시간 · Save 아낀 시간 · Relax 휴식 · Zone 몰입</span>
+    </div>
+    <div class="tlist" id="tlist"></div>
+
+    <div class="sec-h"><h2>돌아보기</h2></div>
+    <div class="review">
+      <div class="fb g"><label for="fbGood"><i></i>잘 보낸 시간</label><textarea id="fbGood" data-f="good" placeholder="가장 값졌던 시간은 언제였나요?"></textarea></div>
+      <div class="fb b"><label for="fbBad"><i></i>아쉬웠던 시간</label><textarea id="fbBad" data-f="bad" placeholder="흘려보낸 시간이 있었다면 이유는?"></textarea></div>
+      <div class="fb n"><label for="fbNext"><i></i>내일 바꿀 것</label><textarea id="fbNext" data-f="next" placeholder="내일 하나만 다르게 한다면?"></textarea></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="card kpis" aria-label="요약">
+      <div class="kpi"><span class="eyebrow">연속</span><b class="num"><span id="stN">0</span><small>일</small></b></div>
+      <div class="kpi gd"><span class="eyebrow">Well</span><b class="num"><span id="goodN">0</span><small>시간</small></b></div>
+      <div class="kpi sv"><span class="eyebrow">Save</span><b class="num"><span id="saveN">0</span><small>시간</small></b></div>
+      <div class="kpi rl"><span class="eyebrow">Relax</span><b class="num"><span id="relaxN">0</span><small>시간</small></b></div>
+      <div class="kpi zn"><span class="eyebrow">Zone</span><b class="num"><span id="zoneN">0</span><small>시간</small></b></div>
+    </section>
+
+    <section class="card cal" aria-label="캘린더">
+      <div class="cal-h">
+        <b class="num" id="ym"></b>
+        <div class="cal-nav"><button class="ib" id="prev" type="button" aria-label="이전 달">‹</button><button class="ib" id="nextM" type="button" aria-label="다음 달">›</button></div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="legend"><span>적음</span><i style="background:var(--h1)"></i><i style="background:var(--h2)"></i><i style="background:var(--h3)"></i><i style="background:var(--h4)"></i><span>많음</span><span class="sp"></span><i style="background:var(--warn);border-radius:50%;width:6px;height:6px"></i><span>회고</span></div>
+      <div class="cal-sum num" id="msum"></div>
+    </section>
+  </aside>
+</main>
+
+<div class="toast" id="toast" aria-live="polite">연속 <b id="toastN">0</b>일째 기록 중</div>
+
+<script>
+const DOW = ["일","월","화","수","목","금","토"];
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,"0");
+const keyOf = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
+const now = new Date();
+const TODAY = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
+const parseKey = k => { const [y,m,d] = k.split("-").map(Number); return { y, m:m-1, d }; };
+const dayNum = k => { const { y, m, d } = parseKey(k); return Math.floor(Date.UTC(y, m, d)/86400000); };
+const shiftKey = (k, n) => { const { y, m, d } = parseKey(k); const t = new Date(y, m, d + n); return keyOf(t.getFullYear(), t.getMonth(), t.getDate()); };
+const ago = k => dayNum(TODAY) - dayNum(k);
+const load = (key, def) => { try { return JSON.parse(localStorage.getItem(key) || def); } catch(e) { return JSON.parse(def); } };
+const store = (key, v) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch(e) {} };
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+
+const START_HOUR = 7;
+const PERIODS = [
+  { h:7,  name:"Morning",     range:"07–12", c:"--p1" },
+  { h:12, name:"Afternoon",   range:"12–18", c:"--p2" },
+  { h:18, name:"Evening", range:"18–24", c:"--p3" }
+];
+let slots = load("timeSlots", "{}");          // { date: { "HH:MM": text } }
+let fbk = load("timeFeedback", "{}");         // { date: { good, bad, next } }
+const openHours = {};                          // { "date|HH": true/false }  30분 칸 펼침 상태
+/* 30분 칸에 다는 표시. 한 칸에 하나만 켜짐 { date: { "HH:MM": 1 } } */
+const MARKS = [
+  { id:"good",  label:"Well",  tip:"잘 쓴 시간으로 표시",  key:"timeGood",       data:load("timeGood", "{}") },
+  { id:"save",  label:"Save",  tip:"아낀 시간으로 표시",   key:"timeSaveSlots",  data:load("timeSaveSlots", "{}") },
+  { id:"relax", label:"Relax", tip:"쉰 시간으로 표시",     key:"timeRelax",      data:load("timeRelax", "{}") },
+  { id:"zone",  label:"Zone",  tip:"몰입한 시간으로 표시", key:"timeZone",       data:load("timeZone", "{}") }
+];
+const MK = Object.fromEntries(MARKS.map(m => [m.id, m]));
+
+const slotsOf = k => slots[k] || {};
+const markOf = (id, k) => MK[id].data[k] || {};
+const markMin = (id, k) => Object.keys(markOf(id, k)).length * 30;
+const markAt = (k, t) => (MARKS.find(m => markOf(m.id, k)[t]) || {}).id || "";
+const hourSet = k => new Set(Object.keys(slotsOf(k)).map(t => Number(t.slice(0, 2))));
+const hoursOf = k => hourSet(k).size;
+const hasFb = k => !!fbk[k] && ["good","bad","next"].some(f => fbk[k][f] && fbk[k][f].trim());
+const recorded = k => hoursOf(k) > 0 || hasFb(k) || MARKS.some(m => markMin(m.id, k) > 0);
+const level = n => n >= 12 ? 4 : n >= 8 ? 3 : n >= 4 ? 2 : n >= 1 ? 1 : 0;
+
+let sel = TODAY;
+let pendingToast = false;
+let toastTimer;
+
+function calcStreak() {
+  let k = TODAY, n = 0;
+  if (!recorded(k)) k = shiftKey(k, -1);
+  while (recorded(k)) { n++; k = shiftKey(k, -1); }
+  return n;
+}
+function showStreak(n) {
+  $("toastN").textContent = n;
+  const t = $("toast"); t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function flushToast() {
+  if (pendingToast) { pendingToast = false; showStreak(calcStreak()); }
+}
+
+/* ---------- 요약 ---------- */
+function renderStats() {
+  $("stN").textContent = calcStreak();
+  $("zoneN").textContent = markMin("zone", sel) / 60;
+  $("saveN").textContent = markMin("save", sel) / 60;
+  $("relaxN").textContent = markMin("relax", sel) / 60;
+  $("goodN").textContent = markMin("good", sel) / 60;
+}
+
+/* ---------- 24시간 바 (30분 × 48칸) ---------- */
+function renderBar() {
+  const bar = $("bar48"), cur = sel === TODAY ? now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1) : -1;
+  bar.textContent = "";
+  const tx = slotsOf(sel), used = new Set();
+  for (let i = 0; i < 48; i++) {
+    const t = `${pad(i >> 1)}:${i % 2 ? "30" : "00"}`, mk = markAt(sel, t);
+    const cls = mk || (tx[t] ? "on" : "");
+    if (mk || tx[t]) used.add(i);
+    const b = el("i", cls + (i === cur ? " now" : ""));
+    b.title = `${t}${tx[t] ? " · " + tx[t] : ""}${mk ? " · " + MK[mk].label : ""}`;
+    bar.append(b);
+  }
+  const sum = $("daySum"); sum.textContent = "";
+  sum.append(el("b", "num", `${used.size / 2}`), " / 24시간 기록");
+}
+
+/* ---------- 시간표 (30분 단위) ---------- */
+function setSlot(k, t, v) {
+  if (v.trim()) (slots[k] = slots[k] || {})[t] = v;
+  else if (slots[k]) { delete slots[k][t]; if (!Object.keys(slots[k]).length) delete slots[k]; }
+  store("timeSlots", slots);
+}
+function afterEdit(k, was) {
+  renderStats(); renderBar(); renderCal();
+  if (!was && recorded(k) && k === TODAY) pendingToast = true;
+}
+const rowMark = (k, keys) => keys.map(t => markAt(k, t)).find(Boolean) || "";
+/* Zone / Save / Relax 는 한 칸에 하나만: 하나를 켜면 나머지는 꺼짐 */
+function toggleMark(k, keys, id, row, btns) {
+  const was = recorded(k), on = rowMark(k, keys) === id;
+  MARKS.forEach(m => {
+    const d = m.data;
+    keys.forEach(t => { if (d[k] && d[k][t]) { delete d[k][t]; if (!Object.keys(d[k]).length) delete d[k]; } });
+    if (m.id === id && !on) keys.forEach(t => { (d[k] = d[k] || {})[t] = 1; });
+    store(m.key, d);
+  });
+  const cur = rowMark(k, keys);
+  MARKS.forEach(m => {
+    row.classList.toggle(m.id, cur === m.id);
+    btns[m.id].classList.toggle("on", cur === m.id); btns[m.id].setAttribute("aria-pressed", String(cur === m.id));
+  });
+  afterEdit(k, was); flushToast();
+}
+function renderSlots() {
+  const k = sel, box = $("tlist"), cur = k === TODAY ? now.getHours() : -1, half = now.getMinutes() < 30 ? 0 : 30;
+  box.textContent = "";
+  let first = true;
+  for (let h = START_HOUR; h < 24; h++) {
+    const per = PERIODS.find(p => p.h === h);
+    if (per) {
+      const d = el("div", "pdiv", per.name); d.style.setProperty("--pc", `var(${per.c})`);
+      d.append(el("small", "", per.range));
+      box.append(d);
+    }
+    const hh = pad(h), t0 = `${hh}:00`, t1 = `${hh}:30`, ok = `${k}|${hh}`;
+    const auto = !!slotsOf(k)[t1] || markAt(k, t0) !== markAt(k, t1);
+    const open = ok in openHours ? openHours[ok] : auto;
+    const rows = open ? [{ t:t0, keys:[t0] }, { t:t1, keys:[t1], sub:true }] : [{ t:t0, keys:[t0, t1] }];
+    rows.forEach(({ t, keys, sub }) => {
+      const v = slotsOf(k)[t] || "", mk = rowMark(k, keys);
+      const isNow = h === cur && (!open || (sub ? half === 30 : half === 0));
+      const row = el("div", "trow" + (sub ? " half" : " full") + (isNow ? " now" : "") + (v ? " filled" : "") + (mk ? " " + mk : ""));
+      const input = el("input"); input.type = "text"; input.maxLength = 80; input.value = v;
+      if (first) { input.placeholder = "무엇을 했나요?"; first = false; }
+      input.setAttribute("aria-label", `${t} 활동`);
+      input.addEventListener("input", () => {
+        const was = recorded(k); setSlot(k, t, input.value);
+        row.classList.toggle("filled", !!input.value.trim());
+        afterEdit(k, was);
+      });
+      const tools = el("span", "rtools");
+      if (!open && slotsOf(k)[t1]) {
+        const hb = el("button", "hint30", "+30분"); hb.type = "button"; hb.title = "30분 메모가 있어요";
+        hb.onclick = () => { openHours[ok] = true; renderSlots(); };
+        tools.append(hb);
+      }
+      const btns = {};
+      MARKS.forEach(M => {
+        const b = el("button", "mk " + M.id + (mk === M.id ? " on" : ""), M.label);
+        b.type = "button"; b.title = M.tip; b.setAttribute("aria-pressed", String(mk === M.id));
+        b.onclick = () => toggleMark(k, keys, M.id, row, btns);
+        btns[M.id] = b; tools.append(b);
+      });
+      let label;
+      if (sub) label = el("span", "tm", t);
+      else {
+        label = el("button", "tm tmb" + (open ? " open" : ""), t); label.type = "button";
+        label.title = open ? "30분 칸 접기" : "30분 칸 펼치기"; label.setAttribute("aria-expanded", String(open));
+        label.onclick = () => { openHours[ok] = !open; renderSlots(); };
+      }
+      row.append(label, input, tools);
+      box.append(row);
+    });
+  }
+}
+
+/* ---------- 돌아보기 ---------- */
+function grow(t) { t.style.height = "auto"; t.style.height = Math.max(96, t.scrollHeight + 2) + "px"; }
+function paintFb() {
+  document.querySelectorAll(".fb textarea").forEach(t => { t.value = (fbk[sel] && fbk[sel][t.dataset.f]) || ""; grow(t); });
+}
+document.querySelectorAll(".fb textarea").forEach(t => t.addEventListener("input", () => {
+  const k = sel, was = recorded(k), f = t.dataset.f;
+  fbk[k] = fbk[k] || {};
+  if (t.value.trim()) fbk[k][f] = t.value; else delete fbk[k][f];
+  if (!Object.keys(fbk[k]).length) delete fbk[k];
+  store("timeFeedback", fbk);
+  grow(t); afterEdit(k, was);
+}));
+document.addEventListener("focusout", flushToast);
+
+/* ---------- 날짜 선택 ---------- */
+function setSel(k) {
+  if (k > TODAY) return;
+  sel = k; pendingToast = false;
+  const { y, m, d } = parseKey(k), wd = DOW[new Date(y, m, d).getDay()];
+  $("pdate").textContent = `${m + 1}월 ${d}일 ${wd}요일`;
+  const n = ago(k);
+  $("prel").textContent = n === 0 ? "오늘" : n === 1 ? "어제" : `${n}일 전`;
+  $("dnext").disabled = k >= TODAY; $("toToday").disabled = k === TODAY;
+  viewY = y; viewM = m;
+  renderSlots(); renderBar(); paintFb(); renderStats(); renderCal();
+}
+$("dprev").onclick = () => setSel(shiftKey(sel, -1));
+$("dnext").onclick = () => setSel(shiftKey(sel, 1));
+$("toToday").onclick = () => setSel(TODAY);
+
+/* ---------- 달력 ---------- */
+let viewY = now.getFullYear(), viewM = now.getMonth();
+function renderCal() {
+  $("ym").textContent = `${viewY}년 ${viewM + 1}월`;
+  const first = new Date(viewY, viewM, 1).getDay(), days = new Date(viewY, viewM + 1, 0).getDate();
+  const g = $("grid"); g.textContent = "";
+  DOW.forEach(d => g.append(el("div", "dow", d)));
+  for (let i = 0; i < first; i++) g.append(el("div", "cell empty"));
+  let hrs = 0, rd = 0, fd = 0, zm = 0, sm = 0, rm = 0, gm = 0;
+  for (let d = 1; d <= days; d++) {
+    const k = keyOf(viewY, viewM, d), future = k > TODAY, hn = hoursOf(k);
+    hrs += hn; zm += markMin("zone", k); sm += markMin("save", k); rm += markMin("relax", k); gm += markMin("good", k); if (recorded(k)) rd++; if (hasFb(k)) fd++;
+    const lv = level(hn);
+    const b = el("button", ["cell", lv && "l" + lv, k === TODAY && "today", k === sel && "sel", future && "future"].filter(Boolean).join(" "), d);
+    b.type = "button"; b.disabled = future; b.title = hn ? `${hn}시간 기록` : "";
+    if (hasFb(k)) b.append(el("i", "fd"));
+    b.onclick = () => setSel(k);
+    g.append(b);
+  }
+  const ms = $("msum"); ms.textContent = "";
+  [["기록한 날", `${rd}일`], ["기록한 시간", `${hrs}시간`], ["Well", `${gm / 60}시간`], ["Save", `${sm / 60}시간`], ["Relax", `${rm / 60}시간`], ["Zone", `${zm / 60}시간`], ["회고한 날", `${fd}일`]]
+    .forEach(([a, v]) => ms.append(el("span", "", a), el("b", "", v)));
+}
+$("prev").onclick = () => { if (--viewM < 0) { viewM = 11; viewY--; } renderCal(); };
+$("nextM").onclick = () => { if (++viewM > 11) { viewM = 0; viewY++; } renderCal(); };
+
+setSel(TODAY);
+</script>
+</body>
+</html>
