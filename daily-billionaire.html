@@ -59,6 +59,8 @@
   .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .notebtn { background: none; border: 1px solid #333; color: #eee; border-radius: 4px; padding: 5px 10px; font-size: 13px; cursor: pointer; }
   .notebtn.has::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #f5c518; margin-right: 6px; }
+  .savebtn { margin-top: 14px; background: #f5c518; color: #111; border: 0; border-radius: 4px; padding: 11px 30px; font-size: 15px; font-weight: 800; cursor: pointer; }
+  .savebtn:disabled { opacity: .3; cursor: default; }
   .back { background: none; border: 0; color: #6cb6ff; font-size: 14px; cursor: pointer; padding: 0; }
   .dnav { --n-ink:#eee; --n-mut:#777; --n-acc:#f5c518; display:flex; justify-content:flex-end; gap:4px; margin:0 auto 14px; padding:0; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; font-family:-apple-system,"Apple SD Gothic Neo",sans-serif; }
   .dnav a { color:var(--n-mut); text-decoration:none; padding:4px 0; margin-left:14px; border-bottom:2px solid transparent; }
@@ -441,7 +443,7 @@ function renderStory(idx) {
     card("NOW", s.now),
     card("VIDEO", `<a href="${s.video.url}" target="_blank" rel="noopener">▶ ${s.video.title}</a>`),
     `<div class="lesson">${inner("TAKEAWAY", s.lesson)}</div>`,
-    `<div>${inner("MY NOTE", "")}<textarea id="note" placeholder="${QUESTION}"></textarea><div class="saved" id="saved"></div></div>`
+    `<div>${inner("MY NOTE", "")}<textarea id="note" placeholder="${QUESTION}"></textarea><div class="saved" id="saved"></div><button class="savebtn" id="savebtn">Save</button></div>`
   ];
   app.innerHTML = `
     <div class="topbar"><button class="back" id="back">← Home</button><button class="notebtn" id="notebtn">My Note</button></div>
@@ -481,10 +483,17 @@ function renderStory(idx) {
 
   // 내 메모: 사람별로 브라우저에 자동 저장
   const note = document.getElementById("note"), saved = document.getElementById("saved"), key = "note:" + s.name;
+  const savebtn = document.getElementById("savebtn");
   try { note.value = localStorage.getItem(key) || ""; } catch (e) {}
+  savebtn.disabled = !note.value.trim();
   note.addEventListener("input", () => {
+    savebtn.disabled = !note.value.trim();
     try { localStorage.setItem(key, note.value); saved.textContent = "Saved"; notebtn.classList.toggle("has", !!note.value); } catch (e) { saved.textContent = "저장 안 됨(브라우저 설정 확인)"; }
   });
+  savebtn.onclick = () => { // 저장하고 홈으로 (daily-goal의 Save와 같은 흐름)
+    try { localStorage.setItem(key, note.value.trim()); } catch (e) { saved.textContent = "저장 안 됨(브라우저 설정 확인)"; return; }
+    location.hash = "#/";
+  };
 }
 
 function route() {

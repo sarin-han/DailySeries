@@ -98,6 +98,25 @@
   .fqt { font-size:16.5px; line-height:1.6; font-weight:700; padding:10px 14px; background:var(--sun); border:2px solid var(--ink); box-shadow:var(--sh); word-break:keep-all; }
   .fq textarea { min-height:110px; margin-top:10px; font-size:15.5px; }
   .fq .err { font-size:14px; color:var(--hot); font-weight:600; }
+  #fbBox { margin-top:16px; }
+  .fb { border:2px solid var(--ink); background:#fff; padding:14px 16px; display:flex; flex-direction:column; gap:12px; }
+  .fb .fql { margin:0; }
+  .fb .orig { font-size:15.5px; line-height:1.85; white-space:pre-wrap; word-break:keep-all; }
+  .fb mark { background:rgba(255,74,28,.2); color:var(--ink); border-bottom:3px solid var(--hot); padding:0 1px; }
+  .fb .better { border-left:5px solid var(--acc); background:rgba(43,59,255,.07); padding:8px 12px; font-weight:700; font-size:15.5px; line-height:1.6; }
+  .fb .eg { border:2px solid var(--ink); border-left:5px solid var(--hot); padding:10px 12px; font-size:14.5px; line-height:1.7; }
+  .fb .eg .egl { font-family:var(--mono); font-weight:700; font-size:10px; letter-spacing:.25em; color:var(--hot); margin-bottom:4px; }
+  .fb textarea.practice { min-height:90px; font-size:15px; line-height:1.7; margin-top:-4px; }
+  .fb .why { font-size:14px; color:var(--muted); line-height:1.6; }
+  .fb .err { color:var(--hot); font-weight:600; font-size:14px; }
+  .stance { display:flex; gap:10px; margin:0 0 16px; }
+  .stance button { flex:1; border:2px solid var(--ink); background:var(--paper); padding:12px 10px; font-size:17px; font-weight:800; box-shadow:3px 3px 0 var(--ink); }
+  .stance button:hover:not(.on) { background:var(--sun); }
+  .stance button.on { box-shadow:none; transform:translate(2px,2px); }
+  .stance button[data-s="agree"].on { background:var(--acc); color:var(--on-acc); }
+  .stance button[data-s="disagree"].on { background:var(--hot); color:#fff; }
+  .fql.counter { color:var(--hot); }
+  .fq .fqt.counter { background:rgba(255,74,28,.14); }
   .foot { display:flex; align-items:center; gap:8px; padding:14px 18px 18px; border-top:2px solid var(--ink); margin-top:12px; }
   .btn { border:2px solid var(--ink); background:var(--paper); padding:10px 20px; font-weight:700; }
   .btn.main { background:var(--acc); color:var(--on-acc); padding:10px 34px; font-weight:800; box-shadow:var(--sh); }
@@ -164,12 +183,15 @@
     <div class="body">
       <div class="step" id="sCat"></div>
       <div class="qbox" id="sQ"></div>
-      <textarea id="free" placeholder="Just start writing…"></textarea>
+      <div class="stance" id="stance"><button type="button" data-s="agree">찬성</button><button type="button" data-s="disagree">반대</button></div>
+      <textarea id="free" placeholder="왜 그렇게 생각하는지 써 보세요."></textarea>
       <div class="meta"><span id="count"></span><span>Don't try to write well. Just write.</span></div>
+      <div id="fbBox"></div>
       <div class="follow" id="follow"></div>
     </div>
     <div class="foot">
-      <button class="btn" id="aiFb">Deeper</button>
+      <button class="btn" id="aiFb">Feedback</button>
+      <button class="btn" id="aiDeep">Deeper</button>
       <span class="sp"></span>
       <button class="btn main" id="save">Save</button>
     </div>
@@ -179,66 +201,66 @@
 <script src="config.js"></script>
 <script>
 const QUESTIONS = [
-  { c:"Fun", k:"25시간", q:"하루가 25시간이 된다면, 늘어난 1시간을 어디에 쓰고 싶은가?" },
-  { c:"Fun", k:"쓸 수 있는 돈", q:"일주일 동안 돈 걱정 없이 쓸 수 있다면 무엇을 하고 싶은가?" },
-  { c:"Fun", k:"초능력", q:"내일 아침 한 가지 능력이 생긴다면 무엇을 고르고, 가장 먼저 어디에 쓸까?" },
-  { c:"Fun", k:"과거의 나", q:"3년 전의 나에게 딱 한 가지 조언을 할 수 있다면 무엇일까?" },
-  { c:"Fun", k:"한 가지 음식", q:"평생 한 가지 음식만 먹어야 한다면 무엇을 고를까?" },
-  { c:"Fun", k:"내 하루 영화", q:"내 하루를 영화로 만든다면 어떤 장르이고 제목은 무엇일까?" },
-  { c:"Fun", k:"폰 없는 하루", q:"휴대폰 없이 하루를 보낸다면 가장 힘든 순간은 언제일까?" },
-  { c:"Fun", k:"무인도", q:"무인도에 물건을 세 가지만 가져갈 수 있다면 무엇일까?" },
-  { c:"Fun", k:"다른 사람의 삶", q:"하루 동안 다른 사람의 삶을 살 수 있다면 누구로 살아 보고 싶은가?" },
-  { c:"Fun", k:"어디든 간다면", q:"지금 당장 어디든 갈 수 있다면 어디로 가고 싶은가?" },
-  { c:"Daily", k:"완벽한 하루", q:"나에게 완벽한 하루는 어떤 모습일까?" },
-  { c:"Daily", k:"아침 습관", q:"아침에 일어나서 가장 먼저 하는 일은 하루에 어떤 영향을 줄까?" },
-  { c:"Daily", k:"시간 쓰는 곳", q:"요즘 내가 가장 많은 시간을 쓰는 것은 무엇이고, 그만한 가치가 있을까?" },
-  { c:"Daily", k:"편한 공간", q:"내가 가장 편안함을 느끼는 공간은 어디이고 왜일까?" },
-  { c:"Daily", k:"습관", q:"내 하루에서 없애고 싶은 습관 하나와 만들고 싶은 습관 하나는 무엇일까?" },
-  { c:"Self", k:"나다움", q:"나는 어떤 때 가장 나답다고 느낄까?" },
-  { c:"Self", k:"숨은 장점", q:"남들은 잘 모르지만 내가 잘하는 것은 무엇일까?" },
-  { c:"Relationship", k:"좋은 친구", q:"좋은 친구란 어떤 사람일까?" },
-  { c:"Money", k:"용돈 두 배", q:"한 달 용돈이나 수입이 두 배가 된다면 무엇이 달라질까?" },
-  { c:"Work & Study", k:"일의 선택", q:"하고 싶은 일을 찾는 것과 잘하는 일을 찾는 것 중 무엇이 먼저일까?" },
-  { c:"Daily", k:"피곤함", q:"요즘 나를 가장 피곤하게 하는 것은 무엇일까?" },
-  { c:"Self", k:"계획과 즉흥", q:"나는 계획형과 즉흥형 중 어느 쪽에 가깝고, 어느 쪽이 나에게 더 맞을까?" },
-  { c:"Relationship", k:"가까운 사이", q:"가까운 사이일수록 예의가 더 필요할까?" },
-  { c:"Work & Study", k:"프로젝트", q:"대학생은 학점보다 프로젝트 경험을 우선해야 할까?" },
-  { c:"Money", k:"경험 소비", q:"소비는 경험에 쓰는 게 물건에 쓰는 것보다 나을까?" },
-  { c:"Self", k:"혼자의 시간", q:"혼자 있는 시간은 나에게 왜 필요할까?" },
-  { c:"Daily", k:"미루는 일", q:"요즘 내가 미루고 있는 일은 무엇이고, 왜 미루고 있을까?" },
-  { c:"Self", k:"실패", q:"실패는 정말 좋은 경험일까?" },
-  { c:"Relationship", k:"먼저 사과", q:"갈등이 생겼을 때 먼저 사과해야 할까?" },
-  { c:"Work & Study", k:"공부법", q:"나에게 맞는 공부 방법은 어떻게 찾을 수 있을까?" },
-  { c:"Self", k:"후회", q:"후회하지 않는 선택이 가능할까?" },
-  { c:"Money", k:"충분한 돈", q:"돈은 얼마나 있으면 충분할까?" },
-  { c:"Work & Study", k:"AI와 기본기", q:"AI 도구가 있어도 기본기를 직접 익힐 필요가 있을까?" },
-  { c:"Relationship", k:"거절", q:"거절을 잘하는 것도 능력일까?" },
-  { c:"Self", k:"남의 시선", q:"남의 시선은 얼마나 신경 써야 할까?" },
-  { c:"Daily", k:"좋은 휴식", q:"나에게 가장 좋은 휴식은 무엇일까?" },
-  { c:"Work & Study", k:"속도 vs 완벽", q:"일을 빨리 끝내는 것과 완벽하게 하는 것 중 무엇이 더 중요할까?" },
-  { c:"Relationship", k:"모두에게 좋은 사람", q:"모든 사람에게 좋은 사람일 필요가 있을까?" },
-  { c:"Money", k:"가성비", q:"싸게 사는 것과 좋은 것을 오래 쓰는 것 중 무엇이 더 합리적일까?" },
-  { c:"Values", k:"행복", q:"행복은 목표일까, 결과일까?" },
-  { c:"Relationship", k:"비밀", q:"연인이나 가족에게도 비밀은 있어도 될까?" },
-  { c:"Self", k:"변하는 것", q:"나이가 들수록 달라지는 것과, 달라지지 않았으면 하는 것은 무엇일까?" },
-  { c:"Work & Study", k:"좋은 팀원", q:"좋은 팀원이란 어떤 사람일까?" },
-  { c:"Work & Study", k:"의견 표현", q:"직장에서 의견이 다를 때 바로 말해야 할까, 참아야 할까?" },
-  { c:"Money", k:"의미 있는 일", q:"월급이 적어도 의미 있는 일을 해야 할까?" },
-  { c:"Values", k:"성공", q:"나에게 성공이란 무엇일까?" },
-  { c:"Values", k:"정직", q:"정직하면 손해를 볼까?" },
-  { c:"Relationship", k:"나이와 존중", q:"나이가 많다는 이유로 존중받아야 할까?" },
-  { c:"Values", k:"용서", q:"용서는 꼭 해야 하는 것일까?" },
-  { c:"Values", k:"운", q:"운은 성공에 얼마나 큰 영향을 줄까?" },
-  { c:"Values", k:"나의 원칙", q:"내가 반드시 지키고 싶은 원칙은 무엇일까?" },
-  { c:"Values", k:"어른", q:"어른이 된다는 것은 무엇일까?" },
-  { c:"Values", k:"자유와 책임", q:"자유와 책임 중 어느 쪽이 더 무거울까?" },
-  { c:"Values", k:"말과 행동", q:"말과 행동이 다를 때 사람을 무엇으로 판단해야 할까?" },
-  { c:"Values", k:"용기", q:"용기는 타고나는 것일까, 만들어지는 것일까?" },
-  { c:"Values", k:"버킷리스트", q:"죽기 전에 꼭 해 보고 싶은 일은 무엇일까?" },
-  { c:"Values", k:"노력과 성공", q:"열심히 하면 누구나 성공할 수 있을까?" },
-  { c:"Values", k:"돕는 것", q:"누군가를 돕는 것은 의무일까, 선택일까?" },
-  { c:"Values", k:"10년 뒤의 나", q:"10년 뒤의 나에게 지금의 나는 무슨 말을 해 주고 싶을까?" },
-  { c:"Values", k:"나의 세상", q:"내가 만든 세상이 있다면 어떤 규칙이 가장 중요할까?" }
+  { c:"Fun", k:"25시간", q:"하루가 25시간이라면, 늘어난 1시간은 쉬는 데 쓰는 것이 낫다." },
+  { c:"Fun", k:"돈 걱정 없다면", q:"돈 걱정이 없다면 일을 하지 않아도 행복할 것이다." },
+  { c:"Fun", k:"초능력", q:"초능력이 생긴다면 숨기고 사는 것이 낫다." },
+  { c:"Fun", k:"과거의 나", q:"과거로 돌아갈 수 있다면 후회되는 일을 바꾸는 것이 맞다." },
+  { c:"Fun", k:"한 가지 음식", q:"평생 한 가지 음식만 먹어야 한다면, 가장 맛있는 음식보다 질리지 않는 음식을 골라야 한다." },
+  { c:"Fun", k:"내 하루 영화", q:"내 하루는 영화로 만들어도 볼 만하다." },
+  { c:"Fun", k:"폰 없는 하루", q:"휴대폰 없는 하루는 오히려 더 좋은 하루다." },
+  { c:"Fun", k:"무인도", q:"무인도에 가져갈 물건은 생존용품보다 즐길 거리여야 한다." },
+  { c:"Fun", k:"다른 사람의 삶", q:"하루 동안 다른 사람의 삶을 살아 보면 내 삶에 더 만족하게 된다." },
+  { c:"Fun", k:"여행", q:"여행은 새로운 곳보다 가 본 곳을 다시 가는 것이 더 좋다." },
+  { c:"Daily", k:"완벽한 하루", q:"완벽한 하루는 계획대로 흘러가는 하루다." },
+  { c:"Daily", k:"아침 습관", q:"아침을 어떻게 시작하느냐가 하루를 결정한다." },
+  { c:"Daily", k:"시간의 가치", q:"가치 있는 일에만 시간을 쓰려는 태도는 오히려 삶을 피곤하게 한다." },
+  { c:"Daily", k:"정리정돈", q:"공간이 정리되어 있어야 마음도 편하다." },
+  { c:"Daily", k:"습관", q:"나쁜 습관은 없애려 하기보다 좋은 습관으로 대체하는 것이 효과적이다." },
+  { c:"Self", k:"나다움", q:"나다움은 타고나는 것이 아니라 만들어 가는 것이다." },
+  { c:"Self", k:"숨은 장점", q:"내 장점은 나보다 남이 더 잘 안다." },
+  { c:"Relationship", k:"좋은 친구", q:"좋은 친구는 듣기 좋은 말보다 쓴소리를 해 주는 사람이다." },
+  { c:"Money", k:"수입 두 배", q:"수입이 두 배가 되어도 지출도 그만큼 늘어난다." },
+  { c:"Work & Study", k:"일의 선택", q:"하고 싶은 일보다 잘하는 일을 먼저 찾아야 한다." },
+  { c:"Daily", k:"피곤할 때", q:"피곤할 때는 쉬는 것보다 몸을 움직이는 것이 낫다." },
+  { c:"Self", k:"계획과 즉흥", q:"계획 없이 즉흥적으로 사는 것이 더 행복하다." },
+  { c:"Relationship", k:"가까운 사이", q:"가까운 사이일수록 예의가 더 필요하다." },
+  { c:"Work & Study", k:"프로젝트", q:"대학생은 학점보다 프로젝트 경험을 우선해야 한다." },
+  { c:"Money", k:"경험 소비", q:"소비는 물건보다 경험에 쓰는 것이 낫다." },
+  { c:"Self", k:"혼자의 시간", q:"혼자 있는 시간이 사람들과 어울리는 시간보다 더 중요하다." },
+  { c:"Daily", k:"미루는 이유", q:"미루는 것은 게으름이 아니라 완벽주의 때문이다." },
+  { c:"Self", k:"실패", q:"실패는 정말 좋은 경험이다." },
+  { c:"Relationship", k:"먼저 사과", q:"갈등이 생기면 내 잘못이 아니어도 먼저 사과해야 한다." },
+  { c:"Work & Study", k:"공부법", q:"공부는 혼자 하는 것보다 함께 하는 것이 더 효과적이다." },
+  { c:"Self", k:"후회", q:"후회하지 않는 선택은 가능하다." },
+  { c:"Money", k:"충분한 돈", q:"돈은 많을수록 좋다." },
+  { c:"Work & Study", k:"AI와 기본기", q:"AI 도구가 있어도 기본기는 직접 익혀야 한다." },
+  { c:"Relationship", k:"거절", q:"거절을 잘하는 것도 능력이다." },
+  { c:"Self", k:"남의 시선", q:"남의 시선은 신경 쓰지 않는 것이 좋다." },
+  { c:"Daily", k:"좋은 휴식", q:"좋은 휴식은 아무것도 안 하는 것이다." },
+  { c:"Work & Study", k:"속도 vs 완벽", q:"일은 완벽하게 하는 것보다 빨리 끝내는 것이 더 중요하다." },
+  { c:"Relationship", k:"모두에게 좋은 사람", q:"모든 사람에게 좋은 사람이 될 필요는 없다." },
+  { c:"Money", k:"가성비", q:"싼 것을 여러 번 사는 것보다 좋은 것을 오래 쓰는 것이 합리적이다." },
+  { c:"Values", k:"행복", q:"행복은 목표가 아니라 결과다." },
+  { c:"Relationship", k:"비밀", q:"연인이나 가족 사이에도 비밀은 있어도 된다." },
+  { c:"Self", k:"변하는 것", q:"나이가 들수록 사람은 변하기 어렵다." },
+  { c:"Work & Study", k:"좋은 팀원", q:"팀에서는 실력보다 태도가 더 중요하다." },
+  { c:"Work & Study", k:"의견 표현", q:"직장에서 의견이 다르면 바로 말하는 것이 낫다." },
+  { c:"Money", k:"의미 있는 일", q:"월급이 적어도 의미 있는 일을 해야 한다." },
+  { c:"Values", k:"성공", q:"성공은 남이 아니라 내가 정의하는 것이다." },
+  { c:"Values", k:"정직", q:"정직하면 결국 손해를 본다." },
+  { c:"Relationship", k:"나이와 존중", q:"나이가 많다는 이유만으로 존중받을 필요는 없다." },
+  { c:"Values", k:"용서", q:"용서는 반드시 해야 하는 것이다." },
+  { c:"Values", k:"운", q:"성공은 노력보다 운이 더 크게 좌우한다." },
+  { c:"Values", k:"원칙", q:"원칙은 상황에 따라 바뀔 수 있다." },
+  { c:"Values", k:"어른", q:"나이가 들면 저절로 어른이 된다." },
+  { c:"Values", k:"자유와 책임", q:"자유가 책임보다 더 중요하다." },
+  { c:"Values", k:"말과 행동", q:"사람은 말이 아니라 행동으로 판단해야 한다." },
+  { c:"Values", k:"용기", q:"용기는 타고나는 것이다." },
+  { c:"Values", k:"버킷리스트", q:"버킷리스트는 만들어 두는 것이 좋다." },
+  { c:"Values", k:"노력과 성공", q:"열심히 하면 누구나 성공할 수 있다." },
+  { c:"Values", k:"돕는 것", q:"도움이 필요한 사람을 돕는 것은 의무다." },
+  { c:"Values", k:"미래의 나", q:"10년 뒤의 나를 위해 지금의 즐거움을 포기해야 한다." },
+  { c:"Values", k:"공정함", q:"공정한 사회는 결과의 평등보다 기회의 평등이 중요하다." }
 ];
 
 const $ = id => document.getElementById(id);
@@ -346,18 +368,26 @@ $("hGo").onclick = () => openCard(TODAY);
 $("hChange").onclick = () => { if (refreshTopic(TODAY)) { delete drafts[TODAY]; store("debateDraft", drafts); renderHome(); } };
 
 /* ---------- 카드 ---------- */
-let selKey = TODAY, cur = null, follow = [];
-const MAX_FOLLOW = 2;
+let selKey = TODAY, cur = null, follow = [], stance = null;
+const MAX_FOLLOW = 5;
+const stanceLabel = () => stance === "agree" ? "찬성" : stance === "disagree" ? "반대" : "";
+function paintStance() {
+  $("stance").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.s === stance));
+}
+$("stance").querySelectorAll("button").forEach(b => b.onclick = () => {
+  stance = b.dataset.s; paintStance(); update(); saveDraft();
+});
 function openCard(k) {
   selKey = k; cur = questionFor(k);
   if (!locks[k] && !log[k]) { locks[k] = cur.q; store("debateLock", locks); }
   if (drafts[k] && drafts[k].q !== cur.q) { delete drafts[k]; store("debateDraft", drafts); }
   const rec = drafts[k] || log[k];
   $("free").value = rec ? (rec.free || "") : "";
-  follow = rec && Array.isArray(rec.follow) ? rec.follow.map(f => ({ q:f.q, a:f.a || "" })) : [];
+  follow = rec && Array.isArray(rec.follow) ? rec.follow.map(f => ({ q:f.q, a:f.a || "", t:f.t })) : [];
+  stance = rec && rec.stance || null;
   $("sCat").textContent = cur.c.toUpperCase();
   $("sQ").textContent = cur.q;
-  renderFollow();
+  renderFollow(); clearFb(); paintStance();
   paintSwap(); update();
   $("overlay").classList.remove("hidden");
   document.body.style.overflow = "hidden";
@@ -376,66 +406,129 @@ function paintSwap() {
 function update() {
   const t = $("free").value, n = countSentences(t);
   $("count").innerHTML = n >= 5 ? `<span class="good">${n} sentences ✓</span>` : `${n} sentences · aim for 5–10`;
-  $("save").disabled = t.trim().length === 0;
+  $("save").disabled = t.trim().length === 0 || !stance;
+  $("save").title = stance ? "" : "찬성/반대를 먼저 골라 주세요";
 }
 function saveDraft() {
   if (!selKey || $("overlay").classList.contains("hidden")) return;
-  drafts[selKey] = { q:cur.q, free:$("free").value, follow };
+  drafts[selKey] = { q:cur.q, free:$("free").value, follow, stance };
   store("debateDraft", drafts);
 }
-$("free").addEventListener("input", () => { update(); saveDraft(); });
+$("free").addEventListener("input", () => { update(); saveDraft(); if (fbShown) clearFb(); });
 $("swap").onclick = () => {
   if (!refreshTopic(selKey)) return;
   delete drafts[selKey]; store("debateDraft", drafts);
   cur = questionFor(selKey);
-  follow = []; renderFollow();
+  follow = []; stance = null; paintStance(); renderFollow(); clearFb();
   $("free").value = ""; $("sCat").textContent = cur.c.toUpperCase(); $("sQ").textContent = cur.q;
   paintSwap(); update(); $("free").focus();
 };
 /* ---------- AI feedback (optional, OpenAI) ---------- */
 const MODEL = "gpt-4o-mini";
-async function askAI(system, user) {
+async function askAI(system, user, json) {
   const key = window.OPENAI_API_KEY || "";
   if (!key) throw new Error("No API key. Open config.js in this folder, paste your OpenAI key between the quotes, save, and reload.");
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method:"POST",
     headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + key },
-    body: JSON.stringify({ model:MODEL, temperature:0.5, messages:[{ role:"system", content:system }, { role:"user", content:user }] })
+    body: JSON.stringify({ model:MODEL, temperature:0.5, ...(json ? { response_format:{ type:"json_object" } } : {}), messages:[{ role:"system", content:system }, { role:"user", content:user }] })
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error((j.error && j.error.message) || `Request failed (${r.status})`);
   return j.choices[0].message.content.trim();
 }
-const FB_PROMPT = "당신은 생각을 깊게 만드는 한국어 질문 코치입니다. 사용자가 주제에 대해 쓴 글을 읽고, 글에서 가장 약한 부분을 파고드는 후속 질문을 딱 하나만 하세요. 이유나 근거가 빠졌으면 '왜'를, 추상적이면 구체적인 예를, 한쪽 입장만 있으면 반대 입장을, 이미 충분히 구체적이면 한 단계 더 깊은 의미를 물어보세요. 칭찬, 평가, 문장 수정은 하지 마세요. 이전 후속 질문이 있다면 겹치지 않게 하세요. 질문 한 문장만, 존댓말 아닌 '~해?' 같은 친근한 말투로, 따옴표나 번호 없이 답하세요.";
+const FB_PROMPT = "당신은 한국어 글쓰기 및 토론 코치입니다. 사용자는 주장에 찬성 또는 반대 입장을 정하고 이유를 썼습니다. 두 가지를 하세요. 1) 더 좋은 예시: 사용자의 입장을 더 설득력 있게 만들 구체적인 예시나 근거를 한두 문장으로 직접 써서 보여 주세요. 사용자가 쓴 내용과 겹치지 않고, 실제 상황이나 사례처럼 구체적이어야 합니다. 평가나 점수는 매기지 마세요. 2) 표현 교정: 어색하거나 모호하거나 반복되거나 너무 추상적인 표현 중 가장 아쉬운 한 곳만 골라 고치세요. 반드시 JSON 객체 하나로만 답하세요: {\"example\":\"사용자 입장을 뒷받침하는 더 좋은 예시 한두 문장\",\"original\":\"글에서 글자 하나 바꾸지 않고 그대로 복사한 아쉬운 구절(한 문장 이내)\",\"better\":\"그 구절을 고친 표현\",\"why\":\"왜 아쉬운지 한두 문장, 친근한 '~해요' 말투\"}";
+let fbShown = false;
+function clearFb() { fbShown = false; $("fbBox").textContent = ""; }
+function renderFb(text, fb, errMsg) {
+  const box = $("fbBox"); box.textContent = "";
+  const wrap = document.createElement("div"); wrap.className = "fb";
+  if (errMsg) {
+    const e = document.createElement("div"); e.className = "err"; e.textContent = errMsg;
+    wrap.append(e); box.append(wrap); return;
+  }
+  const l = document.createElement("div"); l.className = "fql"; l.textContent = "FEEDBACK · 표현 1가지 + 더 좋은 예시";
+  const o = document.createElement("div"); o.className = "orig";
+  const i = text.indexOf(fb.original);
+  if (i >= 0 && fb.original) {
+    const m = document.createElement("mark"); m.textContent = fb.original;
+    const e = i + fb.original.length;
+    const st = Math.max(text.lastIndexOf(".", i - 1), text.lastIndexOf("!", i - 1), text.lastIndexOf("?", i - 1), text.lastIndexOf("\n", i - 1)) + 1;
+    const ends = [".", "!", "?", "\n"].map(c => text.indexOf(c, e)).filter(x => x >= 0);
+    const en = ends.length ? Math.min(...ends) + 1 : text.length;
+    o.append(text.slice(st, i).trimStart(), m, text.slice(e, en).trimEnd());
+  } else {
+    const m = document.createElement("mark"); m.textContent = fb.original || "";
+    o.append(m);
+  }
+  const b = document.createElement("div"); b.className = "better"; b.textContent = "→ " + fb.better;
+  const w = document.createElement("div"); w.className = "why"; w.textContent = fb.why;
+  const eg = document.createElement("div"); eg.className = "eg";
+  const egl = document.createElement("div"); egl.className = "egl"; egl.textContent = "BETTER EXAMPLE";
+  const egt = document.createElement("div"); egt.textContent = fb.example || "";
+  eg.append(egl, egt);
+  wrap.append(l, o, b, w);
+  const pr = document.createElement("textarea"); pr.className = "practice";
+  pr.placeholder = "위 예시를 보고 내 말로 따라 써 보세요.";
+  wrap.append(eg, pr);
+  box.append(wrap); fbShown = true;
+}
+/* ---------- Deeper: 반론 / 추가 질문 ---------- */
+const DEEP_PROMPT = "당신은 토론 상대입니다. 사용자는 주어진 주장에 찬성 또는 반대 입장을 정하고 그 이유를 썼습니다. 글을 읽고 요청에 적힌 [유형]에 맞게 딱 한 가지만 말하세요. 반론: 사용자의 입장과 반대편에서 가장 설득력 있는 근거를 한두 문장으로 제시하고, 그래도 입장이 같은지 물어보세요. 추가 질문: 글의 구체적인 단어나 문장을 짚어서 이유, 예시, 예외 상황, 기준을 더 깊이 묻는 질문 한 문장. 반드시 사용자가 쓴 글의 구체적인 표현을 언급하세요. 칭찬, 평가, 문장 수정은 하지 마세요. 이전 후속 질문이 있다면 겹치지 않게 하고, 이전 답이 있으면 그 답을 바탕으로 한 단계 더 깊이 들어가세요. '~해?' 같은 친근한 말투로, 따옴표와 번호 없이 답하세요.";
+const DEEP_TYPES = ["반론", "추가 질문"];
+let renewN = 0, busy = false;
+function paintDeeper() {
+  const last = follow[follow.length - 1];
+  $("aiDeep").disabled = busy || follow.length >= MAX_FOLLOW || (!!last && !last.a.trim());
+}
 function renderFollow() {
   const box = $("follow");
   box.textContent = "";
   follow.forEach((f, i) => {
+    const counter = f.t === "반론";
     const d = document.createElement("div"); d.className = "fq";
-    const l = document.createElement("div"); l.className = "fql"; l.textContent = `FOLLOW-UP ${i + 1}`;
-    const t = document.createElement("div"); t.className = "fqt"; t.textContent = f.q;
-    const ta = document.createElement("textarea"); ta.value = f.a; ta.placeholder = "여기에 이어서 답해 보세요.";
-    ta.addEventListener("input", () => { f.a = ta.value; saveDraft(); });
+    const l = document.createElement("div"); l.className = "fql" + (counter ? " counter" : "");
+    l.textContent = `${counter ? "COUNTER" : "FOLLOW-UP"} ${i + 1}`;
+    const t = document.createElement("div"); t.className = "fqt" + (counter ? " counter" : ""); t.textContent = f.q;
+    const ta = document.createElement("textarea"); ta.value = f.a; ta.placeholder = counter ? "이 반론에 어떻게 답할래요?" : "여기에 이어서 답해 보세요.";
+    ta.addEventListener("input", () => { f.a = ta.value; paintDeeper(); saveDraft(); });
     d.append(l, t, ta); box.append(d);
   });
-  const btn = $("aiFb");
-  btn.disabled = follow.length >= MAX_FOLLOW;
-  btn.textContent = "Deeper";
+  $("aiDeep").textContent = "Deeper";
+  paintDeeper();
 }
-$("aiFb").onclick = async () => {
+async function makeFollow() {
   const text = $("free").value.trim();
-  const btn = $("aiFb"), box = $("follow");
+  const btn = $("aiDeep"), box = $("follow");
   const showErr = msg => { const e = document.createElement("div"); e.className = "fq err"; e.textContent = msg; box.append(e); };
   renderFollow();
-  if (!text) { showErr("먼저 몇 문장 써 본 뒤에 물어봐 주세요."); return; }
-  btn.disabled = true; btn.textContent = "Thinking…";
-  const prev = follow.map((f, i) => `후속 질문 ${i + 1}: ${f.q}\n내 답: ${f.a || "(아직 답 안 함)"}`).join("\n\n");
+  if (!stance) { showErr("먼저 찬성/반대를 골라 주세요."); return; }
+  if (!text) { showErr("먼저 이유를 몇 문장 써 본 뒤에 눌러 주세요."); return; }
+  busy = true; btn.disabled = true; btn.textContent = "Thinking…";
+  const type = DEEP_TYPES[(follow.length + renewN) % DEEP_TYPES.length];
+  const prev = follow.map((f, i) => `후속 질문 ${i + 1}(${f.t || "추가 질문"}): ${f.q}\n내 답: ${f.a || "(아직 답 안 함)"}`).join("\n\n");
   try {
-    const q = (await askAI(FB_PROMPT, `주제: ${cur.q}\n\n[내 글]\n${text}` + (prev ? `\n\n[이전 후속 질문]\n${prev}` : ""))).replace(/^["'“”\s]+|["'“”\s]+$/g, "");
-    follow.push({ q, a:"" }); saveDraft(); renderFollow();
+    const q = (await askAI(DEEP_PROMPT, `[유형] ${type}\n주장: ${cur.q}\n내 입장: ${stanceLabel()}\n\n[내 글]\n${text}` + (prev ? `\n\n[이전 후속 질문]\n${prev}` : ""))).replace(/^["'“”\s]+|["'“”\s]+$/g, "");
+    busy = false;
+    follow.push({ q, a:"", t:type });
+    saveDraft(); renderFollow();
     const tas = box.querySelectorAll("textarea"); if (tas.length) tas[tas.length - 1].focus({ preventScroll:true });
     box.lastElementChild.scrollIntoView({ behavior:"smooth", block:"nearest" });
-  } catch(e) { renderFollow(); showErr("⚠ " + e.message); }
+  } catch(e) { busy = false; renderFollow(); showErr("⚠ " + e.message); }
+}
+$("aiDeep").onclick = makeFollow;
+$("aiFb").onclick = async () => {
+  const text = $("free").value.trim();
+  const btn = $("aiFb");
+  if (!text) { renderFb("", null, "먼저 몇 문장 써 본 뒤에 눌러 주세요."); return; }
+  btn.disabled = true; btn.textContent = "Reading…";
+  try {
+    const raw = await askAI(FB_PROMPT, `주장: ${cur.q}\n내 입장: ${stanceLabel() || "(아직 안 정함)"}\n\n[내 글]\n${text}`, true);
+    const fb = JSON.parse(raw);
+    renderFb($("free").value, fb);
+    $("fbBox").scrollIntoView({ behavior:"smooth", block:"nearest" });
+  } catch(e) { renderFb("", null, "⚠ " + e.message); }
+  btn.disabled = false; btn.textContent = "Feedback";
 };
 function showStreak(n) {
   const t = $("toast");
@@ -447,7 +540,7 @@ $("save").onclick = () => {
   const text = $("free").value.trim();
   if (!text) return;
   const firstTime = !log[selKey];
-  log[selKey] = { q:cur.q, k:cur.k, c:cur.c, free:text, follow:follow.filter(f => f.q) };
+  log[selKey] = { q:cur.q, k:cur.k, c:cur.c, free:text, stance, follow:follow.filter(f => f.q) };
   store("debateLog2", log);
   delete drafts[selKey]; store("debateDraft", drafts);
   closeCard();
@@ -458,7 +551,7 @@ document.addEventListener("keydown", e => {
   if (!$("overlay").classList.contains("hidden") && e.key === "Escape") { saveDraft(); closeCard(); }
 });
 
-$("today").textContent = `${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()} · Write a few sentences. Don't aim for perfect.`;
+$("today").textContent = `${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()} · Pick a side. Then write why.`;
 renderHome();
 </script>
 </body>
